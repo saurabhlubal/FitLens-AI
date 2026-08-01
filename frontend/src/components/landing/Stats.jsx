@@ -1,25 +1,20 @@
-import CountUp from "react-countup";
 import { motion } from "framer-motion";
 
 const stats = [
   {
-    number: 33,
-    suffix: "+",
+    number: "33+",
     title: "Pose Landmarks",
   },
   {
-    number: 98,
-    suffix: "%",
+    number: "98%",
     title: "AI Accuracy",
   },
   {
-    number: 100,
-    suffix: "ms",
+    number: "100ms",
     title: "Response Time",
   },
   {
-    number: 24,
-    suffix: "/7",
+    number: "24/7",
     title: "AI Monitoring",
   },
 ];
@@ -40,12 +35,7 @@ export default function Stats() {
             className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-xl"
           >
             <h2 className="text-5xl font-black text-emerald-400">
-              <CountUp
-                end={item.number}
-                duration={2}
-                enableScrollSpy
-              />
-              {item.suffix}
+              {item.number}
             </h2>
 
             <p className="mt-4 text-slate-400">

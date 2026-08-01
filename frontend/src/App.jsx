@@ -1,31 +1,64 @@
-import Navbar from "./components/layout/Navbar";
 import MouseGlow from "./components/effects/MouseGlow";
-import PoweredBy from "./components/landing/PoweredBy";
 
+import Navbar from "./components/landing/Navbar";
 import Hero from "./components/landing/Hero";
+import PoweredBy from "./components/landing/PoweredBy";
 import Stats from "./components/landing/Stats";
 import Features from "./components/landing/Features";
 import HowItWorks from "./components/landing/HowItWorks";
 import LiveDemo from "./components/landing/LiveDemo";
+import Testimonials from "./components/landing/Testimonials";
+import CTA from "./components/landing/CTA";
+import FAQ from "./components/landing/FAQ";
+import Footer from "./components/landing/Footer";
+
+import FadeInSection from "./components/common/FadeInSection";
 
 function App() {
   return (
     <>
       <MouseGlow />
+
       <Navbar />
 
-      <main className="relative overflow-x-hidden bg-[#030712] text-white">
-       <Hero />
+      <main className="overflow-x-hidden bg-[#030712] text-white">
 
-<PoweredBy />
+        <Hero />
 
-<Stats />
+        <FadeInSection>
+          <PoweredBy />
+        </FadeInSection>
 
-<Features />
+        <FadeInSection delay={0.1}>
+          <Stats />
+        </FadeInSection>
 
-<HowItWorks />
+        <FadeInSection delay={0.2}>
+          <Features />
+        </FadeInSection>
 
-<LiveDemo />
+        <FadeInSection delay={0.3}>
+          <HowItWorks />
+        </FadeInSection>
+
+        <FadeInSection delay={0.4}>
+          <LiveDemo />
+        </FadeInSection>
+
+        <FadeInSection delay={0.5}>
+          <Testimonials />
+        </FadeInSection>
+
+        <FadeInSection delay={0.6}>
+          <CTA />
+        </FadeInSection>
+
+        <FadeInSection delay={0.7}>
+          <FAQ />
+        </FadeInSection>
+
+        <Footer />
+
       </main>
     </>
   );
