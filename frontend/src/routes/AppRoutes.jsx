@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-
+import WorkoutsPage from "../pages/Workouts/WorkoutsPage";
 import LandingPage from "../pages/Landing/LandingPage";
 import LoginPage from "../pages/Login/LoginPage";
 import RegisterPage from "../pages/Register/RegisterPage";
@@ -55,7 +55,14 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
+<Route
+  path="/workouts"
+  element={
+    <ProtectedRoute>
+      <WorkoutsPage />
+    </ProtectedRoute>
+  }
+/>
       {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
