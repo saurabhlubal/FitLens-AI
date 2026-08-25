@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import WorkoutsPage from "../pages/Workouts/WorkoutsPage";
+
 import LandingPage from "../pages/Landing/LandingPage";
 import LoginPage from "../pages/Login/LoginPage";
 import RegisterPage from "../pages/Register/RegisterPage";
@@ -7,6 +7,10 @@ import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ProfilePage from "../pages/Profile/ProfilePage";
 import FitnessProfilePage from "../pages/FitnessProfile/FitnessProfilePage";
 import ProgressPage from "../pages/Progress/ProgressPage";
+
+import WorkoutsPage from "../pages/Workouts/WorkoutsPage";
+import WorkoutDetailPage from "../pages/Workouts/WorkoutDetailPage";
+
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -14,12 +18,29 @@ import ProtectedRoute from "./ProtectedRoute";
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      {/* =========================
+          Public Routes
+      ========================= */}
 
-      {/* Protected Routes */}
+      <Route
+        path="/"
+        element={<LandingPage />}
+      />
+
+      <Route
+        path="/login"
+        element={<LoginPage />}
+      />
+
+      <Route
+        path="/register"
+        element={<RegisterPage />}
+      />
+
+      {/* =========================
+          Dashboard
+      ========================= */}
+
       <Route
         path="/dashboard"
         element={
@@ -28,6 +49,10 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* =========================
+          Profile
+      ========================= */}
 
       <Route
         path="/profile"
@@ -38,6 +63,10 @@ export default function AppRoutes() {
         }
       />
 
+      {/* =========================
+          Fitness Profile
+      ========================= */}
+
       <Route
         path="/fitness-profile"
         element={
@@ -47,6 +76,10 @@ export default function AppRoutes() {
         }
       />
 
+      {/* =========================
+          Progress
+      ========================= */}
+
       <Route
         path="/progress"
         element={
@@ -55,16 +88,38 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-<Route
-  path="/workouts"
-  element={
-    <ProtectedRoute>
-      <WorkoutsPage />
-    </ProtectedRoute>
-  }
-/>
-      {/* 404 */}
-      <Route path="*" element={<NotFoundPage />} />
+
+      {/* =========================
+          Workouts
+      ========================= */}
+
+      <Route
+        path="/workouts"
+        element={
+          <ProtectedRoute>
+            <WorkoutsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Workout Detail */}
+      <Route
+        path="/workouts/:id"
+        element={
+          <ProtectedRoute>
+            <WorkoutDetailPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =========================
+          404
+      ========================= */}
+
+      <Route
+        path="*"
+        element={<NotFoundPage />}
+      />
     </Routes>
   );
 }
