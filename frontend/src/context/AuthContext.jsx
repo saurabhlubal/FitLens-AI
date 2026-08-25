@@ -16,7 +16,12 @@ export function AuthProvider({ children }) {
     }
 
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse stored user:", error);
+        localStorage.removeItem("user");
+      }
     }
 
     setLoading(false);
@@ -28,6 +33,20 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", jwtToken);
+  };
+
+  // Update user information everywhere in the app
+  const updateUser = (updatedUser) => {
+    setUser((currentUser) => {
+      const newUser = {
+        ...currentUser,
+        ...updatedUser,
+      };
+
+      localStorage.setItem("user", JSON.stringify(newUser));
+
+      return newUser;
+    });
   };
 
   const logout = () => {
@@ -43,6 +62,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    updateUser,
     logout,
     isAuthenticated: !!token,
   };
