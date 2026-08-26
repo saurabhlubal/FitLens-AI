@@ -40,6 +40,20 @@ export default function DashboardPage() {
             </button>
 
             <button
+              onClick={() => navigate("/scan")}
+              className="text-slate-300 transition hover:text-white"
+            >
+              Scan
+            </button>
+
+            <button
+              onClick={() => navigate("/train")}
+              className="text-slate-300 transition hover:text-white"
+            >
+              Train
+            </button>
+
+            <button
               onClick={() => navigate("/progress")}
               className="text-slate-300 transition hover:text-white"
             >
