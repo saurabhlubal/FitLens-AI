@@ -4,40 +4,76 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("fitlens-user");
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken) {
+      setToken(storedToken);
+    }
 
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse stored user:", error);
+        localStorage.removeItem("user");
+      }
     }
 
     setLoading(false);
   }, []);
 
-  function login(userData) {
-    localStorage.setItem("fitlens-user", JSON.stringify(userData));
+  const login = (userData, jwtToken) => {
     setUser(userData);
-  }
+    setToken(jwtToken);
 
-  function logout() {
-    localStorage.removeItem("fitlens-user");
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", jwtToken);
+  };
+
+  // Update user information everywhere in the app
+  const updateUser = (updatedUser) => {
+    setUser((currentUser) => {
+      const newUser = {
+        ...currentUser,
+        ...updatedUser,
+      };
+
+      localStorage.setItem("user", JSON.stringify(newUser));
+
+      return newUser;
+    });
+  };
+
+  const logout = () => {
     setUser(null);
-  }
+    setToken(null);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
+
+  const value = {
+    user,
+    token,
+    loading,
+    login,
+    updateUser,
+    logout,
+    isAuthenticated: !!token,
+  };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
 
-export default AuthContext;
+export function useAuthContext() {
+  return useContext(AuthContext);
+}
