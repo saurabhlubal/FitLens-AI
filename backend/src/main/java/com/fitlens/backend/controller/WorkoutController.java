@@ -21,6 +21,10 @@ public class WorkoutController {
         this.workoutService = workoutService;
     }
 
+    // ============================================================
+    // CREATE WORKOUT
+    // ============================================================
+
     @PostMapping
     public ResponseEntity<WorkoutResponse> createWorkout(
             @RequestBody WorkoutRequest request,
@@ -37,6 +41,10 @@ public class WorkoutController {
                 .body(response);
     }
 
+    // ============================================================
+    // GET USER WORKOUTS
+    // ============================================================
+
     @GetMapping
     public ResponseEntity<List<WorkoutResponse>> getUserWorkouts(
             Authentication authentication
@@ -49,6 +57,10 @@ public class WorkoutController {
         );
     }
 
+    // ============================================================
+    // GET SINGLE WORKOUT
+    // ============================================================
+
     @GetMapping("/{id}")
     public ResponseEntity<WorkoutResponse> getWorkout(
             @PathVariable Long id,
@@ -60,5 +72,22 @@ public class WorkoutController {
         return ResponseEntity.ok(
                 workoutService.getWorkout(id, user)
         );
+    }
+
+    // ============================================================
+    // DELETE WORKOUT
+    // ============================================================
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWorkout(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+
+        User user = (User) authentication.getPrincipal();
+
+        workoutService.deleteWorkout(id, user);
+
+        return ResponseEntity.noContent().build();
     }
 }

@@ -16,6 +16,7 @@ export default function DashboardPage() {
       {/* =========================
           NAVBAR
       ========================= */}
+
       <nav className="border-b border-white/10 bg-slate-900/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
@@ -61,16 +62,19 @@ export default function DashboardPage() {
             </button>
 
           </div>
-
         </div>
       </nav>
 
       {/* =========================
           MAIN DASHBOARD
       ========================= */}
+
       <main className="mx-auto max-w-7xl px-6 py-10">
 
-        {/* Welcome */}
+        {/* =========================
+            WELCOME
+        ========================= */}
+
         <section className="mb-10">
 
           <p className="mb-2 text-sm font-medium uppercase tracking-wider text-emerald-400">
@@ -78,7 +82,8 @@ export default function DashboardPage() {
           </p>
 
           <h2 className="text-4xl font-bold">
-            Welcome back{user?.name ? `, ${user.name}` : ""}! 👋
+            Welcome back
+            {user && user.name ? ", " + user.name : ""}! 👋
           </h2>
 
           <p className="mt-3 text-slate-400">
@@ -91,6 +96,7 @@ export default function DashboardPage() {
         {/* =========================
             QUICK ACTIONS
         ========================= */}
+
         <section className="mb-10">
 
           <h3 className="mb-5 text-2xl font-semibold">
@@ -99,7 +105,8 @@ export default function DashboardPage() {
 
           <div className="grid gap-6 md:grid-cols-3">
 
-            {/* Workouts */}
+            {/* WORKOUTS */}
+
             <button
               onClick={() => navigate("/workouts")}
               className="group rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:-translate-y-1 hover:border-emerald-500/40"
@@ -123,7 +130,8 @@ export default function DashboardPage() {
 
             </button>
 
-            {/* Progress */}
+            {/* PROGRESS */}
+
             <button
               onClick={() => navigate("/progress")}
               className="group rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:-translate-y-1 hover:border-blue-500/40"
@@ -147,7 +155,8 @@ export default function DashboardPage() {
 
             </button>
 
-            {/* Profile */}
+            {/* PROFILE */}
+
             <button
               onClick={() => navigate("/profile")}
               className="group rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:-translate-y-1 hover:border-purple-500/40"
@@ -178,6 +187,7 @@ export default function DashboardPage() {
         {/* =========================
             AI FORM ANALYSIS
         ========================= */}
+
         <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 p-8">
 
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
@@ -200,10 +210,10 @@ export default function DashboardPage() {
             </div>
 
             <button
-              onClick={() => navigate("/workouts")}
+              onClick={() => navigate("/training")}
               className="shrink-0 rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-black transition hover:bg-emerald-400"
             >
-              Start Training
+              Start AI Analysis
             </button>
 
           </div>

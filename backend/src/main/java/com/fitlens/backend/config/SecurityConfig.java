@@ -28,11 +28,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
-       http
-    .csrf(csrf -> csrf.disable())
-    .cors(cors -> {})
+        http
+                .csrf(csrf -> csrf.disable())
 
-                // JWT authentication is stateless
+                .cors(cors -> {})
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
@@ -40,17 +40,14 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
 
-                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
 
-                // Run our JWT filter before Spring's username/password filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
