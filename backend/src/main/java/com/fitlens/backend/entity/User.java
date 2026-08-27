@@ -24,4 +24,7 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(name = "profile_picture_url")
+private String profilePictureUrl;
 }

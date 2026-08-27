@@ -1,44 +1,44 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "../pages/Landing/LandingPage";
 import LoginPage from "../pages/Login/LoginPage";
 import RegisterPage from "../pages/Register/RegisterPage";
+
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import ProfilePage from "../pages/Profile/ProfilePage";
 import FitnessProfilePage from "../pages/FitnessProfile/FitnessProfilePage";
+
 import ProgressPage from "../pages/Progress/ProgressPage";
 
 import WorkoutsPage from "../pages/Workouts/WorkoutsPage";
 import WorkoutDetailPage from "../pages/Workouts/WorkoutDetailPage";
 
+import CameraAnalysisPage from "../pages/Camera/CameraAnalysisPage";
+
+import TrainingPage from "../pages/Training/TraininPage";
+
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 
+
 export default function AppRoutes() {
   return (
     <Routes>
+
       {/* =========================
-          Public Routes
+          PUBLIC ROUTES
       ========================= */}
 
-      <Route
-        path="/"
-        element={<LandingPage />}
-      />
+      <Route path="/" element={<LandingPage />} />
 
-      <Route
-        path="/login"
-        element={<LoginPage />}
-      />
+      <Route path="/login" element={<LoginPage />} />
 
-      <Route
-        path="/register"
-        element={<RegisterPage />}
-      />
+      <Route path="/register" element={<RegisterPage />} />
+
 
       {/* =========================
-          Dashboard
+          PROTECTED ROUTES
       ========================= */}
 
       <Route
@@ -50,10 +50,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* =========================
-          Profile
-      ========================= */}
-
       <Route
         path="/profile"
         element={
@@ -62,10 +58,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
-      {/* =========================
-          Fitness Profile
-      ========================= */}
 
       <Route
         path="/fitness-profile"
@@ -76,10 +68,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* =========================
-          Progress
-      ========================= */}
-
       <Route
         path="/progress"
         element={
@@ -89,8 +77,9 @@ export default function AppRoutes() {
         }
       />
 
+
       {/* =========================
-          Workouts
+          WORKOUT ROUTES
       ========================= */}
 
       <Route
@@ -102,9 +91,8 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Workout Detail */}
       <Route
-        path="/workouts/:id"
+        path="/workouts/:workoutId"
         element={
           <ProtectedRoute>
             <WorkoutDetailPage />
@@ -112,14 +100,49 @@ export default function AppRoutes() {
         }
       />
 
+
       {/* =========================
-          404
+          AI CAMERA
       ========================= */}
+
+      <Route
+        path="/camera"
+        element={
+          <ProtectedRoute>
+            <CameraAnalysisPage />
+          </ProtectedRoute>
+        }
+      />
+
+
+      {/* =========================
+          TRAINING
+      ========================= */}
+
+      <Route
+        path="/training"
+        element={
+          <ProtectedRoute>
+            <TrainingPage />
+          </ProtectedRoute>
+        }
+      />
+
+
+      {/* =========================
+          UNKNOWN ROUTE
+      ========================= */}
+
+      <Route
+        path="/404"
+        element={<NotFoundPage />}
+      />
 
       <Route
         path="*"
         element={<NotFoundPage />}
       />
+
     </Routes>
   );
 }

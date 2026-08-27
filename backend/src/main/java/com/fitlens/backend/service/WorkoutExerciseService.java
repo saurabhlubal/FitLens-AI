@@ -35,6 +35,7 @@ public class WorkoutExerciseService {
             WorkoutExerciseRequest request,
             User user
     ) {
+
         Workout workout = workoutRepository.findById(workoutId)
                 .orElseThrow(() ->
                         new RuntimeException("Workout not found")
@@ -66,6 +67,7 @@ public class WorkoutExerciseService {
             Long workoutId,
             User user
     ) {
+
         Workout workout = workoutRepository.findById(workoutId)
                 .orElseThrow(() ->
                         new RuntimeException("Workout not found")
@@ -81,9 +83,77 @@ public class WorkoutExerciseService {
                 .toList();
     }
 
+    public WorkoutExerciseResponse updateWorkoutExercise(
+            Long workoutId,
+            Long workoutExerciseId,
+            WorkoutExerciseRequest request,
+            User user
+    ) {
+
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() ->
+                        new RuntimeException("Workout not found")
+                );
+
+        if (!workout.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        WorkoutExercise workoutExercise =
+                workoutExerciseRepository.findById(workoutExerciseId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Workout exercise not found"
+                                )
+                        );
+
+        if (!workoutExercise.getWorkout().getId().equals(workoutId)) {
+            throw new RuntimeException("Workout exercise mismatch");
+        }
+
+        workoutExercise.setSets(request.getSets());
+        workoutExercise.setReps(request.getReps());
+
+        WorkoutExercise updated =
+                workoutExerciseRepository.save(workoutExercise);
+
+        return toResponse(updated);
+    }
+
+    public void deleteWorkoutExercise(
+            Long workoutId,
+            Long workoutExerciseId,
+            User user
+    ) {
+
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() ->
+                        new RuntimeException("Workout not found")
+                );
+
+        if (!workout.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        WorkoutExercise workoutExercise =
+                workoutExerciseRepository.findById(workoutExerciseId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Workout exercise not found"
+                                )
+                        );
+
+        if (!workoutExercise.getWorkout().getId().equals(workoutId)) {
+            throw new RuntimeException("Workout exercise mismatch");
+        }
+
+        workoutExerciseRepository.delete(workoutExercise);
+    }
+
     private WorkoutExerciseResponse toResponse(
             WorkoutExercise workoutExercise
     ) {
+
         Exercise exercise = workoutExercise.getExercise();
 
         return new WorkoutExerciseResponse(

@@ -23,6 +23,10 @@ public class WorkoutExerciseController {
         this.workoutExerciseService = workoutExerciseService;
     }
 
+    // ============================================================
+    // ADD EXERCISE
+    // ============================================================
+
     @PostMapping
     public ResponseEntity<WorkoutExerciseResponse> addExerciseToWorkout(
             @PathVariable Long workoutId,
@@ -44,6 +48,10 @@ public class WorkoutExerciseController {
                 .body(response);
     }
 
+    // ============================================================
+    // GET WORKOUT EXERCISES
+    // ============================================================
+
     @GetMapping
     public ResponseEntity<List<WorkoutExerciseResponse>> getWorkoutExercises(
             @PathVariable Long workoutId,
@@ -58,5 +66,52 @@ public class WorkoutExerciseController {
                         user
                 )
         );
+    }
+
+    // ============================================================
+    // EDIT EXERCISE
+    // ============================================================
+
+    @PutMapping("/{workoutExerciseId}")
+    public ResponseEntity<WorkoutExerciseResponse> updateWorkoutExercise(
+            @PathVariable Long workoutId,
+            @PathVariable Long workoutExerciseId,
+            @RequestBody WorkoutExerciseRequest request,
+            Authentication authentication
+    ) {
+
+        User user = (User) authentication.getPrincipal();
+
+        WorkoutExerciseResponse response =
+                workoutExerciseService.updateWorkoutExercise(
+                        workoutId,
+                        workoutExerciseId,
+                        request,
+                        user
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    // ============================================================
+    // DELETE EXERCISE
+    // ============================================================
+
+    @DeleteMapping("/{workoutExerciseId}")
+    public ResponseEntity<Void> deleteWorkoutExercise(
+            @PathVariable Long workoutId,
+            @PathVariable Long workoutExerciseId,
+            Authentication authentication
+    ) {
+
+        User user = (User) authentication.getPrincipal();
+
+        workoutExerciseService.deleteWorkoutExercise(
+                workoutId,
+                workoutExerciseId,
+                user
+        );
+
+        return ResponseEntity.noContent().build();
     }
 }
