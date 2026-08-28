@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import LandingPage from "../pages/Landing/LandingPage";
 import LoginPage from "../pages/Login/LoginPage";
@@ -20,7 +20,6 @@ import TrainingPage from "../pages/Training/TraininPage";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
 import ProtectedRoute from "./ProtectedRoute";
-
 
 export default function AppRoutes() {
   return (
@@ -102,7 +101,7 @@ export default function AppRoutes() {
 
 
       {/* =========================
-          AI CAMERA
+          CAMERA / AI ANALYSIS
       ========================= */}
 
       <Route
@@ -130,13 +129,8 @@ export default function AppRoutes() {
 
 
       {/* =========================
-          UNKNOWN ROUTE
+          404
       ========================= */}
-
-      <Route
-        path="/404"
-        element={<NotFoundPage />}
-      />
 
       <Route
         path="*"
