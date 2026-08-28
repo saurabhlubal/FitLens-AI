@@ -65,6 +65,7 @@ export default function DashboardPage() {
         </div>
       </nav>
 
+
       {/* =========================
           MAIN DASHBOARD
       ========================= */}
@@ -83,7 +84,7 @@ export default function DashboardPage() {
 
           <h2 className="text-4xl font-bold">
             Welcome back
-            {user && user.name ? ", " + user.name : ""}! 👋
+            {user?.name ? `, ${user.name}` : ""}! 👋
           </h2>
 
           <p className="mt-3 text-slate-400">
@@ -92,6 +93,7 @@ export default function DashboardPage() {
           </p>
 
         </section>
+
 
         {/* =========================
             QUICK ACTIONS
@@ -104,6 +106,7 @@ export default function DashboardPage() {
           </h3>
 
           <div className="grid gap-6 md:grid-cols-3">
+
 
             {/* WORKOUTS */}
 
@@ -130,6 +133,7 @@ export default function DashboardPage() {
 
             </button>
 
+
             {/* PROGRESS */}
 
             <button
@@ -154,6 +158,7 @@ export default function DashboardPage() {
               </p>
 
             </button>
+
 
             {/* PROFILE */}
 
@@ -184,6 +189,7 @@ export default function DashboardPage() {
 
         </section>
 
+
         {/* =========================
             AI FORM ANALYSIS
         ========================= */}
@@ -209,8 +215,11 @@ export default function DashboardPage() {
 
             </div>
 
+
+            {/* CAMERA / AI ANALYSIS BUTTON */}
+
             <button
-              onClick={() => navigate("/training")}
+              onClick={() => navigate("/camera")}
               className="shrink-0 rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-black transition hover:bg-emerald-400"
             >
               Start AI Analysis
