@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
 
 export default function WorkoutsPage() {
   const { token } = useAuthContext();
+  const navigate = useNavigate();
 
   // =========================
   // Workout State
@@ -48,6 +50,8 @@ export default function WorkoutsPage() {
   // ============================================================
   const fetchWorkouts = async () => {
     try {
+      setError("");
+
       const response = await fetch(
         "http://localhost:8080/api/workouts",
         {
@@ -384,11 +388,18 @@ export default function WorkoutsPage() {
   };
 
   // ============================================================
+  // START AI ANALYSIS
+  // ============================================================
+  const handleStartAIAnalysis = (exercise) => {
+    navigate(`/ai-analysis/${exercise.id}`);
+  };
+
+  // ============================================================
   // LOADING
   // ============================================================
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         Loading workouts...
       </div>
     );
@@ -398,25 +409,23 @@ export default function WorkoutsPage() {
   // UI
   // ============================================================
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-8">
+    <div className="min-h-screen bg-slate-950 p-8 text-white">
       <div className="mx-auto max-w-6xl">
 
-        {/* PAGE TITLE */}
         <h1 className="mb-8 text-4xl font-bold">
           My Workouts
         </h1>
 
-        {/* ERROR */}
         {error && (
           <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
             {error}
           </div>
         )}
 
-        {/* =====================================================
-            CREATE WORKOUT
-        ===================================================== */}
+        {/* CREATE WORKOUT */}
+
         <div className="mb-10 rounded-2xl border border-white/10 bg-slate-900 p-6">
+
           <h2 className="mb-6 text-2xl font-semibold">
             Add Workout
           </h2>
@@ -425,6 +434,7 @@ export default function WorkoutsPage() {
             onSubmit={handleSubmit}
             className="grid gap-4 md:grid-cols-2"
           >
+
             <input
               type="text"
               placeholder="Workout name"
@@ -468,20 +478,24 @@ export default function WorkoutsPage() {
             >
               Add Workout
             </button>
+
           </form>
         </div>
 
-        {/* =====================================================
-            WORKOUT LIST
-        ===================================================== */}
+        {/* WORKOUT LIST */}
+
         <div className="space-y-4">
 
           {workouts.length === 0 ? (
+
             <div className="rounded-2xl border border-white/10 bg-slate-900 p-8 text-center text-slate-400">
               No workouts yet.
             </div>
+
           ) : (
+
             workouts.map((workout) => (
+
               <div
                 key={workout.id}
                 className={`rounded-2xl border bg-slate-900 p-6 transition ${
@@ -492,9 +506,11 @@ export default function WorkoutsPage() {
               >
 
                 {/* WORKOUT HEADER */}
+
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
 
                   <div>
+
                     <h3 className="text-2xl font-semibold">
                       {workout.name}
                     </h3>
@@ -502,9 +518,11 @@ export default function WorkoutsPage() {
                     <p className="mt-2 text-slate-400">
                       {workout.date}
                     </p>
+
                   </div>
 
                   <div className="flex gap-6 text-sm text-slate-300">
+
                     <span>
                       {workout.duration} min
                     </span>
@@ -512,10 +530,13 @@ export default function WorkoutsPage() {
                     <span>
                       {workout.caloriesBurned} kcal
                     </span>
+
                   </div>
+
                 </div>
 
                 {/* WORKOUT ACTIONS */}
+
                 <div className="mt-5 flex flex-wrap gap-3">
 
                   <button
@@ -528,21 +549,30 @@ export default function WorkoutsPage() {
                   </button>
 
                   <button
+                    onClick={() => navigate(`/workouts/${workout.id}`)}
+                    className="rounded-xl bg-purple-600 px-5 py-2 font-semibold hover:bg-purple-500"
+                  >
+                    View Details
+                  </button>
+
+                  <button
                     onClick={() => handleDeleteWorkout(workout)}
                     disabled={deleteLoading}
                     className="rounded-xl bg-red-600 px-5 py-2 font-semibold hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Delete Workout
                   </button>
+
                 </div>
 
-                {/* =================================================
-                    SELECTED WORKOUT
-                ================================================= */}
+                {/* SELECTED WORKOUT */}
+
                 {selectedWorkout?.id === workout.id && (
+
                   <div className="mt-6 border-t border-white/10 pt-6">
 
                     {/* ADD EXERCISE */}
+
                     <div className="rounded-2xl bg-slate-800 p-5">
 
                       <h4 className="mb-4 text-xl font-semibold">
@@ -561,18 +591,22 @@ export default function WorkoutsPage() {
                           }
                           className="rounded-xl bg-slate-700 p-3 text-white outline-none"
                         >
+
                           <option value="">
                             Select Exercise
                           </option>
 
                           {exercises.map((exercise) => (
+
                             <option
                               key={exercise.id}
                               value={exercise.id}
                             >
                               {exercise.name}
                             </option>
+
                           ))}
+
                         </select>
 
                         <input
@@ -604,9 +638,11 @@ export default function WorkoutsPage() {
                         </button>
 
                       </form>
+
                     </div>
 
                     {/* EXERCISES */}
+
                     <div className="mt-6">
 
                       <h4 className="mb-4 text-xl font-semibold">
@@ -630,9 +666,10 @@ export default function WorkoutsPage() {
                               className="rounded-xl border border-white/10 bg-slate-800 p-4"
                             >
 
+                              {/* EDIT MODE */}
+
                               {editingExerciseId === exercise.id ? (
 
-                                /* EDIT MODE */
                                 <div>
 
                                   <h5 className="mb-4 text-lg font-semibold">
@@ -694,6 +731,7 @@ export default function WorkoutsPage() {
                               ) : (
 
                                 /* NORMAL MODE */
+
                                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
 
                                   <div>
@@ -725,6 +763,17 @@ export default function WorkoutsPage() {
                                       )}
                                     </div>
 
+                                    {/* AI ANALYSIS BUTTON */}
+
+                                    <button
+                                      onClick={() =>
+                                        handleStartAIAnalysis(exercise)
+                                      }
+                                      className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500"
+                                    >
+                                      Start AI Analysis
+                                    </button>
+
                                     <button
                                       onClick={() =>
                                         handleStartEdit(exercise)
@@ -750,30 +799,43 @@ export default function WorkoutsPage() {
                               )}
 
                               {/* AI FEEDBACK */}
+
                               {exercise.aiFeedback && (
+
                                 <div className="mt-3 rounded-lg bg-slate-700 p-3 text-sm text-slate-300">
+
                                   <span className="font-semibold">
                                     AI Feedback:
                                   </span>{" "}
+
                                   {exercise.aiFeedback}
+
                                 </div>
+
                               )}
 
                             </div>
+
                           ))}
 
                         </div>
+
                       )}
 
                     </div>
+
                   </div>
+
                 )}
 
               </div>
+
             ))
+
           )}
 
         </div>
+
       </div>
     </div>
   );
