@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { Camera } from "lucide-react";
 import { createPoseLandmarker } from "../../utils/pose/poseLandmarker";
+import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
 
 export default function CameraAnalysisPage() {
   const videoRef = useRef(null);
@@ -120,7 +122,7 @@ export default function CameraAnalysisPage() {
 
       ctx.arc(x, y, 5, 0, Math.PI * 2);
 
-      ctx.fillStyle = "#10b981";
+      ctx.fillStyle = "#B8F23A";
 
       ctx.fill();
     });
@@ -148,7 +150,7 @@ export default function CameraAnalysisPage() {
       [26, 28],
     ];
 
-    ctx.strokeStyle = "#10b981";
+    ctx.strokeStyle = "#B8F23A";
     ctx.lineWidth = 3;
 
     connections.forEach(([start, end]) => {
@@ -323,57 +325,48 @@ export default function CameraAnalysisPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 p-8 text-white">
+    <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
+      {/* AUTHENTICATED NAVBAR */}
+      <AuthenticatedNavbar />
 
-      <div className="mx-auto max-w-7xl">
-
+      <div className="mx-auto max-w-7xl px-6 py-10 sm:py-12">
         {/* HEADER */}
+        <div className="mb-10">
+          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-[#B8F23A]">
+            AI Vision
+          </span>
 
-        <div className="mb-8">
-
-          <h1 className="text-4xl font-bold">
+          <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-[#F5F5F0]">
             AI Form Analysis
           </h1>
 
-          <p className="mt-2 text-slate-400">
-            Analyze your exercise form using
-            camera-based movement detection.
+          <p className="mt-2 text-sm sm:text-base text-[#A8A8A2] leading-relaxed">
+            Analyze your exercise form using camera-based movement detection.
           </p>
-
         </div>
 
         {/* MAIN GRID */}
-
         <div className="grid gap-8 lg:grid-cols-3">
-
           {/* CAMERA */}
-
-          <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 lg:col-span-2">
-
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-8 lg:col-span-2">
             <div className="mb-5 flex items-center justify-between">
-
-              <h2 className="text-2xl font-semibold">
+              <h2 className="text-xl font-bold uppercase tracking-wider text-[#F5F5F0]">
                 Camera
               </h2>
 
               <span
-                className={`rounded-full px-3 py-1 text-sm ${
+                className={`rounded-full px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider ${
                   cameraOn
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-slate-700 text-slate-400"
+                    ? "border border-[#B8F23A]/30 bg-[#B8F23A]/10 text-[#B8F23A]"
+                    : "border border-white/10 bg-[#141418] text-[#8E8E92]"
                 }`}
               >
-                {cameraOn
-                  ? "Camera On"
-                  : "Camera Off"}
+                {cameraOn ? "Camera On" : "Camera Off"}
               </span>
-
             </div>
 
-            {/* CAMERA */}
-
-            <div className="relative aspect-video overflow-hidden rounded-2xl bg-black">
-
+            {/* VIDEO & SKELETON CANVAS */}
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-[#040406]">
               <video
                 ref={videoRef}
                 autoPlay
@@ -389,51 +382,44 @@ export default function CameraAnalysisPage() {
 
               {!cameraOn && (
                 <div className="absolute inset-0 flex items-center justify-center">
-
                   <div className="text-center">
-
-                    <div className="mb-3 text-5xl">
-                      📷
+                    <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-[#16161a] text-[#B8F23A]">
+                      <Camera size={28} />
                     </div>
 
-                    <p className="text-slate-400">
+                    <p className="text-sm text-[#8E8E92]">
                       Camera is currently off
                     </p>
-
                   </div>
-
                 </div>
               )}
 
               {detecting && (
-                <div className="absolute left-4 top-4 rounded-lg bg-emerald-500/90 px-4 py-2 text-sm font-semibold text-black">
-                  AI DETECTION
+                <div className="absolute left-4 top-4 rounded-xl border border-[#B8F23A]/40 bg-[#060608]/85 backdrop-blur-md px-3.5 py-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#B8F23A]">
+                  AI DETECTION ACTIVE
                 </div>
               )}
 
               {landmarksDetected && (
-                <div className="absolute right-4 top-4 rounded-lg bg-blue-500/90 px-4 py-2 text-sm font-semibold text-white">
+                <div className="absolute right-4 top-4 rounded-xl border border-white/20 bg-[#060608]/85 backdrop-blur-md px-3.5 py-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#F5F5F0]">
                   BODY DETECTED
                 </div>
               )}
-
             </div>
 
             {/* BUTTONS */}
-
-            <div className="mt-5 flex flex-wrap gap-3">
-
+            <div className="mt-6 flex flex-wrap gap-3">
               {!cameraOn ? (
                 <button
                   onClick={startCamera}
-                  className="rounded-xl bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-500"
+                  className="rounded-full bg-[#B8F23A] px-7 py-3 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)]"
                 >
                   Start Camera
                 </button>
               ) : (
                 <button
                   onClick={stopCamera}
-                  className="rounded-xl bg-red-600 px-6 py-3 font-semibold hover:bg-red-500"
+                  className="rounded-full border border-red-500/30 bg-red-500/10 px-7 py-3 text-xs font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-500/20"
                 >
                   Stop Camera
                 </button>
@@ -443,43 +429,33 @@ export default function CameraAnalysisPage() {
                 <button
                   onClick={startDetection}
                   disabled={!cameraOn}
-                  className="rounded-xl bg-emerald-600 px-6 py-3 font-semibold hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-full bg-[#B8F23A] px-7 py-3 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)] disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   Start AI Detection
                 </button>
               ) : (
                 <button
                   onClick={stopDetection}
-                  className="rounded-xl bg-orange-600 px-6 py-3 font-semibold hover:bg-orange-500"
+                  className="rounded-full border border-orange-500/30 bg-orange-500/10 px-7 py-3 text-xs font-bold uppercase tracking-wider text-orange-400 transition hover:bg-orange-500/20"
                 >
                   Stop AI Detection
                 </button>
               )}
-
             </div>
 
             {/* STATUS */}
-
-            <div className="mt-4 rounded-xl bg-slate-800 p-4">
-
-              <p className="text-sm text-slate-300">
-                {feedback ||
-                  "Start the camera to begin."}
+            <div className="mt-4 rounded-xl border border-white/[0.06] bg-[#141418] p-4">
+              <p className="text-xs font-mono text-[#D2D2CC]">
+                {feedback || "Start the camera to begin."}
               </p>
-
             </div>
-
           </div>
 
           {/* ANALYSIS PANEL */}
-
           <div className="space-y-6">
-
             {/* EXERCISE */}
-
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-
-              <h2 className="mb-4 text-xl font-semibold">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-7">
+              <h2 className="mb-4 text-base font-bold uppercase tracking-wider text-[#F5F5F0]">
                 Exercise
               </h2>
 
@@ -488,72 +464,48 @@ export default function CameraAnalysisPage() {
                 onChange={(e) =>
                   setExercise(e.target.value)
                 }
-                className="w-full rounded-xl bg-slate-800 p-3 text-white outline-none"
+                className="w-full rounded-xl border border-white/[0.08] bg-[#141418] p-3 text-sm text-[#F5F5F0] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
               >
-
-                <option value="Bicep Curl">
-                  Bicep Curl
-                </option>
-
-                <option value="Squat">
-                  Squat
-                </option>
-
-                <option value="Push Up">
-                  Push Up
-                </option>
-
-                <option value="Shoulder Press">
-                  Shoulder Press
-                </option>
-
+                <option value="Bicep Curl">Bicep Curl</option>
+                <option value="Squat">Squat</option>
+                <option value="Push Up">Push Up</option>
+                <option value="Shoulder Press">Shoulder Press</option>
               </select>
-
             </div>
 
             {/* DETECTION STATUS */}
-
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-
-              <p className="text-sm text-slate-400">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-7">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
                 Pose Detection
               </p>
 
               <p
-                className={`mt-2 text-2xl font-bold ${
+                className={`mt-2 text-2xl font-black uppercase tracking-tight ${
                   landmarksDetected
-                    ? "text-emerald-400"
-                    : "text-slate-500"
+                    ? "text-[#B8F23A]"
+                    : "text-[#55555A]"
                 }`}
               >
                 {landmarksDetected
                   ? "Body Detected"
                   : "Waiting..."}
               </p>
-
             </div>
 
             {/* FEEDBACK */}
-
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-
-              <h2 className="mb-3 text-xl font-semibold">
+            <div className="rounded-2xl border border-[#B8F23A]/20 bg-[#0e1208] p-6 sm:p-7">
+              <h2 className="mb-3 text-base font-bold uppercase tracking-wider text-[#F5F5F0]">
                 AI Feedback
               </h2>
 
-              <p className="text-slate-400">
+              <p className="text-xs text-[#D2D2CC] leading-relaxed">
                 {feedback ||
                   "Start camera analysis to receive form feedback."}
               </p>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
-}
+}

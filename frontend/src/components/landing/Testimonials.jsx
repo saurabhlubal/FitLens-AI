@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { motion } from "framer-motion";
 
 const testimonials = [
   {
@@ -26,72 +27,83 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="relative py-28 px-6 overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute left-1/2 top-0 h-[450px] w-[450px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[160px]" />
-
+    <section className="relative py-28 sm:py-32 px-6">
       <div className="relative mx-auto max-w-7xl">
         {/* Heading */}
-        <div className="text-center mb-16">
-          <span className="inline-block rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-400">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-16"
+        >
+          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#B8F23A]">
             Trusted by Fitness Professionals
           </span>
 
-          <h2 className="mt-6 text-5xl font-bold text-white">
+          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#F5F5F0]">
             Loved by Athletes & Trainers
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-400">
+          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-[#A8A8A2]">
             Join fitness enthusiasts using AI-powered movement analysis to
             improve technique, prevent injuries, and train smarter.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards */}
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3">
           {testimonials.map((item, index) => (
-            <div
+            <motion.div
               key={index}
-              className="group rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl transition-all duration-500 hover:-translate-y-3 hover:border-emerald-400/40 hover:bg-white/[0.05] hover:shadow-[0_0_45px_rgba(16,185,129,0.15)]"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="group rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-8 transition-all duration-300 hover:border-white/20 hover:bg-[#111115]"
             >
               {/* Stars */}
               <div className="mb-6 flex gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    size={18}
-                    className="fill-emerald-400 text-emerald-400"
+                    size={15}
+                    className="fill-[#B8F23A] text-[#B8F23A]"
                   />
                 ))}
               </div>
 
               {/* Review */}
-              <p className="leading-8 text-gray-300">
+              <p className="text-[#D2D2CC] leading-relaxed text-sm sm:text-base italic">
                 "{item.review}"
               </p>
 
               {/* User */}
-              <div className="mt-8 flex items-center gap-4">
+              <div className="mt-8 flex items-center gap-4 border-t border-white/[0.06] pt-6">
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="h-14 w-14 rounded-full border-2 border-emerald-400 object-cover"
+                  className="h-12 w-12 rounded-full border border-white/20 object-cover"
                 />
 
                 <div>
-                  <h4 className="font-semibold text-white">
+                  <h4 className="font-bold text-[#F5F5F0] text-sm">
                     {item.name}
                   </h4>
 
-                  <p className="text-sm text-emerald-400">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#B8F23A]">
                     {item.role}
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
     </section>
   );
-}
+}

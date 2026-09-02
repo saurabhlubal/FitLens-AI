@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const faqs = [
   {
@@ -38,71 +39,81 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
-    <section className="relative py-28 px-6">
-
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent" />
-
-      <div className="relative max-w-5xl mx-auto">
-
-        <div className="text-center mb-16">
-
-          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-400">
+    <section className="relative py-28 sm:py-32 px-6">
+      <div className="relative max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-16"
+        >
+          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#B8F23A]">
             Frequently Asked Questions
           </span>
 
-          <h2 className="mt-6 text-5xl font-bold text-white">
+          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#F5F5F0]">
             Got Questions?
           </h2>
 
-          <p className="mt-5 text-gray-400 text-lg">
+          <p className="mt-5 text-[#A8A8A2] text-base sm:text-lg leading-relaxed">
             Everything you need to know about FitLens AI.
           </p>
+        </motion.div>
 
-        </div>
+        <div className="space-y-4">
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index;
 
-        <div className="space-y-5">
-
-          {faqs.map((faq, index) => (
-            <div
-              key={index}
-              className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden"
-            >
-              <button
-                onClick={() =>
-                  setOpenIndex(openIndex === index ? -1 : index)
-                }
-                className="w-full flex items-center justify-between p-7 text-left"
-              >
-                <span className="text-lg font-semibold text-white">
-                  {faq.question}
-                </span>
-
-                <ChevronDown
-                  className={`transition-transform duration-300 ${
-                    openIndex === index ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
+            return (
               <div
-                className={`transition-all duration-300 overflow-hidden ${
-                  openIndex === index
-                    ? "max-h-96 pb-7 px-7"
-                    : "max-h-0"
+                key={index}
+                className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                  isOpen
+                    ? "border-[#B8F23A]/35 bg-[#0e110a]"
+                    : "border-white/[0.08] bg-[#0c0c0e] hover:border-white/15"
                 }`}
               >
-                <p className="text-gray-400 leading-8">
-                  {faq.answer}
-                </p>
+                <button
+                  onClick={() =>
+                    setOpenIndex(isOpen ? -1 : index)
+                  }
+                  className="w-full flex items-center justify-between p-6 sm:p-7 text-left gap-4"
+                >
+                  <span className="text-base sm:text-lg font-bold text-[#F5F5F0]">
+                    {faq.question}
+                  </span>
+
+                  <ChevronDown
+                    size={20}
+                    className={`shrink-0 text-[#B8F23A] transition-transform duration-300 ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pb-7 px-6 sm:px-7 pt-1 border-t border-white/[0.04]">
+                        <p className="text-[#A8A8A2] text-sm sm:text-base leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-
-            </div>
-          ))}
-
+            );
+          })}
         </div>
-
       </div>
-
     </section>
   );
-}
+}

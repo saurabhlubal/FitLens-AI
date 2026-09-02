@@ -21,24 +21,26 @@ const stats = [
 
 export default function Stats() {
   return (
-    <section className="py-24">
-      <div className="mx-auto grid max-w-7xl gap-8 px-6 md:grid-cols-4">
+    <section className="relative py-20 border-y border-white/[0.06] bg-[#070709]">
+      <div className="mx-auto grid max-w-7xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((item, index) => (
           <motion.div
             key={item.title}
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{
-              delay: index * 0.1,
+              duration: 0.5,
+              delay: index * 0.08,
+              ease: [0.16, 1, 0.3, 1],
             }}
-            className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-xl"
+            className="group rounded-2xl border border-white/[0.06] bg-[#0c0c0e] p-8 text-center transition-all duration-300 hover:border-[#B8F23A]/30 hover:bg-[#111115]"
           >
-            <h2 className="text-5xl font-black text-emerald-400">
+            <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-[#F5F5F0] transition-colors group-hover:text-[#B8F23A]">
               {item.number}
             </h2>
 
-            <p className="mt-4 text-slate-400">
+            <p className="mt-3 text-xs font-bold uppercase tracking-widest text-[#8E8E92]">
               {item.title}
             </p>
           </motion.div>
@@ -46,4 +48,4 @@ export default function Stats() {
       </div>
     </section>
   );
-}
+}

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { useAuthContext } from "../../context/AuthContext";
+import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
 
 export default function FitnessProfilePage() {
+  const navigate = useNavigate();
   const { token } = useAuthContext();
 
   const [form, setForm] = useState({
@@ -118,32 +122,50 @@ export default function FitnessProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        Loading fitness profile...
+      <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
+        <AuthenticatedNavbar />
+        <div className="flex min-h-[60vh] items-center justify-center text-xs font-bold uppercase tracking-widest text-[#8E8E92]">
+          Loading fitness profile...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white px-6 py-10">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
+      {/* AUTHENTICATED NAVBAR */}
+      <AuthenticatedNavbar />
 
-        <h1 className="mb-2 text-4xl font-bold">
-          Fitness Profile
-        </h1>
+      <div className="mx-auto max-w-2xl px-6 py-10 sm:py-12">
+        <button
+          onClick={() => navigate("/profile")}
+          className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0c0c0e] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#D2D2CC] transition hover:border-[#B8F23A]/40 hover:text-white"
+        >
+          <ArrowLeft size={14} />
+          Back to Profile
+        </button>
 
-        <p className="mb-8 text-slate-400">
-          Enter your information to personalize your FitLens AI experience.
-        </p>
+        <div className="mb-8">
+          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-[#B8F23A]">
+            Metrics
+          </span>
+
+          <h1 className="mt-3 text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#F5F5F0]">
+            Fitness Profile
+          </h1>
+
+          <p className="mt-2 text-sm sm:text-base text-[#A8A8A2] leading-relaxed">
+            Enter your information to personalize your FitLens AI experience.
+          </p>
+        </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 rounded-2xl border border-white/10 bg-slate-900 p-8"
+          className="space-y-6 rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-7 sm:p-9"
         >
-
           {/* Age */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
               Age
             </label>
 
@@ -156,13 +178,13 @@ export default function FitnessProfilePage() {
               min="1"
               max="120"
               placeholder="Enter your age"
-              className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] placeholder-[#55555A] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
             />
           </div>
 
           {/* Height */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
               Height (cm)
             </label>
 
@@ -175,13 +197,13 @@ export default function FitnessProfilePage() {
               min="50"
               max="250"
               placeholder="Enter your height"
-              className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] placeholder-[#55555A] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
             />
           </div>
 
           {/* Weight */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
               Weight (kg)
             </label>
 
@@ -195,13 +217,13 @@ export default function FitnessProfilePage() {
               max="300"
               step="0.1"
               placeholder="Enter your weight"
-              className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] placeholder-[#55555A] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
             />
           </div>
 
           {/* Fitness Goal */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
               Fitness Goal
             </label>
 
@@ -210,7 +232,7 @@ export default function FitnessProfilePage() {
               value={form.fitnessGoal}
               onChange={handleChange}
               required
-              className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
             >
               <option value="">Select your goal</option>
               <option value="Weight Loss">Weight Loss</option>
@@ -223,7 +245,7 @@ export default function FitnessProfilePage() {
 
           {/* Activity Level */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
               Activity Level
             </label>
 
@@ -232,7 +254,7 @@ export default function FitnessProfilePage() {
               value={form.activityLevel}
               onChange={handleChange}
               required
-              className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
             >
               <option value="">Select activity level</option>
               <option value="Sedentary">Sedentary</option>
@@ -245,14 +267,14 @@ export default function FitnessProfilePage() {
 
           {/* Success */}
           {message && (
-            <div className="rounded-xl bg-green-500/10 px-4 py-3 text-green-400">
+            <div className="rounded-xl border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-3 text-xs font-bold uppercase tracking-wider text-[#B8F23A]">
               {message}
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="rounded-xl bg-red-500/10 px-4 py-3 text-red-400">
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-400">
               {error}
             </div>
           )}
@@ -260,13 +282,12 @@ export default function FitnessProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-full bg-[#B8F23A] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Fitness Profile"}
           </button>
-
         </form>
       </div>
     </div>
   );
-}
+}

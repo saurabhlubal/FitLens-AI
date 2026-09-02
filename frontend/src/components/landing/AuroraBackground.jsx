@@ -1,71 +1,75 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 export default function AuroraBackground() {
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+
+  // Real-life fitness training video (athletic gym workout footage)
+  const primaryVideoUrl =
+    "https://assets.mixkit.co/videos/52089/52089-720.mp4";
+  const fallbackVideoUrl =
+    "https://assets.mixkit.co/videos/52317/52317-720.mp4";
+  const posterUrl =
+    "https://assets.mixkit.co/videos/52089/52089-thumb-720-0.jpg";
+
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 h-full w-full overflow-hidden pointer-events-none select-none z-0">
 
-      {/* Base Background */}
-      <div className="absolute inset-0 bg-[#030712]" />
+      {/* Deep Obsidian / Near-Black Base */}
+      <div className="absolute inset-0 bg-[#060608]" />
 
-      {/* Emerald Aurora */}
-      <motion.div
-        animate={{
-          x: [-120, 120, -120],
-          y: [-60, 60, -60],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute left-[-15%] top-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/20 blur-[140px]"
-      />
+      {/* =========================================================
+          AUTHENTIC FITNESS/GYM VIDEO (Edge-to-Edge Full Viewport)
+          Natural color, brightened to clearly recognize the athlete
+      ========================================================= */}
+      {!videoError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: videoLoaded ? 0.8 : 0.3 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute inset-0 h-full w-full"
+        >
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster={posterUrl}
+            onLoadedData={() => setVideoLoaded(true)}
+            onError={() => setVideoError(true)}
+            className="h-full w-full object-cover object-center filter contrast-[1.06] brightness-[0.9] saturate-[0.95]"
+          >
+            <source src={primaryVideoUrl} type="video/mp4" />
+            <source src={fallbackVideoUrl} type="video/mp4" />
+          </video>
+        </motion.div>
+      )}
 
-      {/* Cyan Aurora */}
-      <motion.div
-        animate={{
-          x: [100, -80, 100],
-          y: [60, -40, 60],
-          scale: [1.1, 0.9, 1.1],
-        }}
-        transition={{
-          duration: 22,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-cyan-500/20 blur-[150px]"
-      />
+      {/* Fallback Image Poster if video cannot play */}
+      {videoError && (
+        <div
+          className="absolute inset-0 h-full w-full bg-cover bg-center opacity-40 filter contrast-[1.05] brightness-[0.85]"
+          style={{ backgroundImage: `url(${posterUrl})` }}
+        />
+      )}
 
-      {/* Blue Glow */}
-      <motion.div
-        animate={{
-          opacity: [0.2, 0.45, 0.2],
-          scale: [1, 1.15, 1],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute left-1/2 top-1/2 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/10 blur-[120px]"
-      />
+      {/* =========================================================
+          SOPHISTICATED OBSIDIAN GRADIENT & VIGNETTE OVERLAYS
+          Lighter center so gym and athlete remain clearly visible
+      ========================================================= */}
+      {/* 1. Natural Center Vignette (gentle in middle, framed on margins) */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,6,8,0.18)_0%,rgba(6,6,8,0.45)_52%,#060608_100%)]" />
 
-      {/* Grid */}
-      <div
-        className="absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)
-          `,
-          backgroundSize: "60px 60px",
-        }}
-      />
+      {/* 2. Top-down scrim for seamless transparent navbar */}
+      <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#060608]/75 via-[#060608]/25 to-transparent" />
 
-      {/* Radial Fade */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,#030712_90%)]" />
+      {/* 3. Bottom-up scrim for seamless transition into next section */}
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#060608] via-[#060608]/80 to-transparent" />
 
     </div>
   );
 }
+
+

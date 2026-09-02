@@ -4,6 +4,7 @@ import PoweredBy from "../../components/landing/PoweredBy";
 import Features from "../../components/landing/Features";
 import HowItWorks from "../../components/landing/HowItWorks";
 import LiveDemo from "../../components/landing/LiveDemo";
+import Stats from "../../components/landing/Stats";
 import Testimonials from "../../components/landing/Testimonials";
 import FAQ from "../../components/landing/FAQ";
 import CTA from "../../components/landing/CTA";
@@ -13,13 +14,12 @@ import MouseGlow from "../../components/effects/MouseGlow";
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-slate-950 text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#060608] text-[#F5F5F0]">
       <MouseGlow />
 
       <Navbar />
 
       <main>
-
         <Hero />
 
         <PoweredBy />
@@ -36,6 +36,8 @@ export default function LandingPage() {
           <LiveDemo />
         </section>
 
+        <Stats />
+
         <section id="testimonials">
           <Testimonials />
         </section>
@@ -47,10 +49,9 @@ export default function LandingPage() {
         <section id="cta">
           <CTA />
         </section>
-
       </main>
 
       <Footer />
     </div>
   );
-}
+}
