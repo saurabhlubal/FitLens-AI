@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
 
 export default function WorkoutDetailPage() {
-  const { id } = useParams();
+  const { workoutId } = useParams();
   const navigate = useNavigate();
   const { token } = useAuthContext();
 
@@ -18,7 +18,7 @@ export default function WorkoutDetailPage() {
       setError("");
 
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${id}`,
+        `http://localhost:8080/api/workouts/${workoutId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -31,7 +31,6 @@ export default function WorkoutDetailPage() {
       }
 
       const data = await response.json();
-
       setWorkout(data);
     } catch (err) {
       setError(err.message);
@@ -41,7 +40,7 @@ export default function WorkoutDetailPage() {
   const fetchExercises = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${id}/exercises`,
+        `http://localhost:8080/api/workouts/${workoutId}/exercises`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,7 +53,6 @@ export default function WorkoutDetailPage() {
       }
 
       const data = await response.json();
-
       setExercises(data);
     } catch (err) {
       setError(err.message);
@@ -62,7 +60,7 @@ export default function WorkoutDetailPage() {
   };
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !workoutId) return;
 
     const loadData = async () => {
       setLoading(true);
@@ -76,7 +74,7 @@ export default function WorkoutDetailPage() {
     };
 
     loadData();
-  }, [token, id]);
+  }, [token, workoutId]);
 
   if (loading) {
     return (
@@ -90,7 +88,6 @@ export default function WorkoutDetailPage() {
     return (
       <div className="min-h-screen bg-slate-950 p-8 text-white">
         <div className="mx-auto max-w-4xl">
-
           <button
             onClick={() => navigate("/workouts")}
             className="mb-6 rounded-xl bg-slate-800 px-5 py-2 text-sm font-semibold transition hover:bg-slate-700"
@@ -101,7 +98,6 @@ export default function WorkoutDetailPage() {
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-400">
             {error || "Workout not found"}
           </div>
-
         </div>
       </div>
     );
@@ -121,7 +117,6 @@ export default function WorkoutDetailPage() {
 
         {/* Workout Header */}
         <div className="mb-8 rounded-2xl border border-white/10 bg-slate-900 p-8">
-
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
 
             <div>
