@@ -11,162 +11,130 @@ import PoseSkeleton from "./PoseSkeleton";
 
 export default function LiveDemo() {
   return (
-    <section className="relative py-32">
-
+    <section className="relative py-28 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">
-
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center"
         >
-          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2 text-sm text-emerald-400">
+          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#B8F23A]">
             Live Demo
           </span>
 
-          <h2 className="mt-6 text-5xl font-black text-white">
+          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#F5F5F0]">
             See AI In Action
           </h2>
 
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-400">
+          <p className="mx-auto mt-6 max-w-3xl text-base sm:text-lg leading-relaxed text-[#A8A8A2]">
             Watch how FitLens AI detects body landmarks, tracks movement,
             counts repetitions, and provides intelligent feedback in real time.
           </p>
         </motion.div>
 
-        <div className="mt-20 grid items-center gap-12 lg:grid-cols-2">
-
+        <div className="mt-20 grid items-center gap-10 lg:grid-cols-2">
           {/* Camera Preview */}
-
           <motion.div
-            initial={{ opacity: 0, x: -60 }}
+            initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: .8 }}
-            className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900"
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0e] shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-
+            <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#121216] px-6 py-4">
               <div className="flex items-center gap-3">
-
-                <Camera className="text-emerald-400" />
-
-                <span className="font-medium text-white">
+                <Camera className="text-[#B8F23A]" size={18} />
+                <span className="text-sm font-bold tracking-wide text-[#F5F5F0]">
                   Live Camera
                 </span>
-
               </div>
 
-              <div className="flex items-center gap-2">
-
-                <span className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
-
-                <span className="text-sm text-emerald-400">
+              <div className="flex items-center gap-2 rounded-full border border-[#B8F23A]/25 bg-[#B8F23A]/10 px-3 py-1">
+                <span className="h-2 w-2 rounded-full bg-[#B8F23A] animate-pulse" />
+                <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-[#B8F23A]">
                   Tracking
                 </span>
-
               </div>
-
             </div>
 
-            <div className="relative flex h-[500px] items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-black">
-
+            <div className="relative flex h-[480px] items-center justify-center bg-gradient-to-b from-[#08080a] via-[#040406] to-[#08080a]">
               <PoseSkeleton />
-
             </div>
-
           </motion.div>
 
-          {/* Dashboard */}
-
+          {/* Telemetry Dashboard */}
           <motion.div
-            initial={{ opacity: 0, x: 60 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: .8 }}
-            className="space-y-6"
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-5"
           >
-
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-
-              <div className="flex items-center gap-3">
-
-                <Dumbbell className="text-emerald-400" />
-
-                <h3 className="text-xl font-semibold text-white">
+            {/* Exercise Card */}
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 transition-all duration-300 hover:border-[#B8F23A]/30">
+              <div className="flex items-center gap-2.5 text-[#B8F23A]">
+                <Dumbbell size={18} />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8E8E92]">
                   Exercise
                 </h3>
-
               </div>
 
-              <p className="mt-4 text-4xl font-black text-emerald-400">
+              <p className="mt-3 text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#F5F5F0]">
                 Squat
               </p>
-
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* Metrics Dual Grid */}
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 transition-all duration-300 hover:border-[#B8F23A]/30">
+                <div className="flex items-center gap-2 text-[#B8F23A]">
+                  <Activity size={18} />
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#8E8E92]">
+                    Confidence
+                  </p>
+                </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-
-                <Activity className="text-cyan-400" />
-
-                <h3 className="mt-5 text-3xl font-bold text-white">
+                <h3 className="mt-3 text-3xl font-extrabold text-[#F5F5F0]">
                   98%
                 </h3>
-
-                <p className="mt-2 text-slate-400">
-                  Confidence
-                </p>
-
               </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 transition-all duration-300 hover:border-[#B8F23A]/30">
+                <div className="flex items-center gap-2 text-[#B8F23A]">
+                  <Timer size={18} />
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#8E8E92]">
+                    Repetitions
+                  </p>
+                </div>
 
-                <Timer className="text-emerald-400" />
-
-                <h3 className="mt-5 text-3xl font-bold text-white">
+                <h3 className="mt-3 text-3xl font-extrabold text-[#F5F5F0]">
                   12
                 </h3>
-
-                <p className="mt-2 text-slate-400">
-                  Repetitions
-                </p>
-
               </div>
-
             </div>
 
-            <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6">
-
-              <div className="flex items-center gap-3">
-
-                <CheckCircle2 className="text-emerald-400" />
-
-                <h3 className="text-xl font-semibold text-white">
+            {/* AI Feedback Card */}
+            <div className="rounded-2xl border border-[#B8F23A]/20 bg-[#0e1208] p-6 transition-all">
+              <div className="flex items-center gap-2.5 text-[#B8F23A]">
+                <CheckCircle2 size={18} />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#F5F5F0]">
                   AI Feedback
                 </h3>
-
               </div>
 
-              <p className="mt-4 text-lg text-emerald-300">
+              <p className="mt-3 text-base font-bold text-[#B8F23A]">
                 Excellent posture detected.
               </p>
 
-              <p className="mt-2 text-slate-300">
+              <p className="mt-2 text-sm leading-relaxed text-[#D2D2CC]">
                 Knees aligned correctly, back remains neutral, and squat depth is optimal.
               </p>
-
             </div>
-
           </motion.div>
-
         </div>
-
       </div>
-
     </section>
   );
-}
+}

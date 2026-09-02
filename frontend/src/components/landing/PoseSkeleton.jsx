@@ -17,13 +17,13 @@ const joints = [
 ];
 
 const connections = [
-  [0,1],
-  [1,2],[1,3],
-  [2,4],[4,6],
-  [3,5],[5,7],
-  [1,8],
-  [8,9],[8,10],
-  [9,11],[10,12]
+  [0, 1],
+  [1, 2], [1, 3],
+  [2, 4], [4, 6],
+  [3, 5], [5, 7],
+  [1, 8],
+  [8, 9], [8, 10],
+  [9, 11], [10, 12],
 ];
 
 export default function PoseSkeleton() {
@@ -37,19 +37,25 @@ export default function PoseSkeleton() {
         repeat: Infinity,
         ease: "easeInOut",
       }}
-      className="relative"
+      className="relative flex items-center justify-center"
     >
-      {/* Glow */}
-      <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-3xl" />
+      {/* Ambient Depth Glow */}
+      <div className="absolute inset-0 rounded-full bg-[#B8F23A]/[0.06] blur-3xl pointer-events-none" />
 
       <svg
-        width="250"
-        height="420"
+        width="240"
+        height="400"
         viewBox="0 0 220 420"
         className="relative z-10"
       >
-        {/* Body silhouette */}
+        <defs>
+          <filter id="limeGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
 
+        {/* Anatomical Body Silhouette */}
         <motion.path
           d="M110 40
              C88 40 74 58 74 88
@@ -66,13 +72,12 @@ export default function PoseSkeleton() {
              C136 195 146 175 146 145
              L146 88
              C146 58 132 40 110 40Z"
-          fill="rgba(255,255,255,.04)"
-          stroke="rgba(255,255,255,.08)"
-          strokeWidth="2"
+          fill="rgba(255,255,255,0.02)"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth="1.5"
         />
 
-        {/* Bones */}
-
+        {/* Bone Connections */}
         {connections.map(([a, b], i) => (
           <motion.line
             key={i}
@@ -80,53 +85,67 @@ export default function PoseSkeleton() {
             y1={joints[a][1]}
             x2={joints[b][0]}
             y2={joints[b][1]}
-            stroke="#10B981"
-            strokeWidth="2"
+            stroke="#B8F23A"
+            strokeWidth="2.2"
             strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
+            filter="url(#limeGlow)"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.85 }}
             transition={{
-              duration: 1,
-              delay: i * 0.05,
+              duration: 0.8,
+              delay: i * 0.04,
+              ease: "easeOut",
             }}
           />
         ))}
 
-        {/* Joints */}
-
+        {/* Biomechanical Joints */}
         {joints.map(([x, y], i) => (
-          <motion.circle
-            key={i}
-            cx={x}
-            cy={y}
-            r="5"
-            fill="#34D399"
-            animate={{
-              scale: [1, 1.7, 1],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              delay: i * 0.08,
-            }}
-          />
+          <g key={i}>
+            {/* Outer Joint Aura */}
+            <motion.circle
+              cx={x}
+              cy={y}
+              r="6"
+              fill="#B8F23A"
+              fillOpacity="0.25"
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.25, 0.6, 0.25],
+              }}
+              transition={{
+                duration: 2.2,
+                repeat: Infinity,
+                delay: i * 0.07,
+                ease: "easeInOut",
+              }}
+            />
+            {/* Inner Core Node */}
+            <circle
+              cx={x}
+              cy={y}
+              r="3.5"
+              fill="#FFFFFF"
+              stroke="#B8F23A"
+              strokeWidth="1.2"
+            />
+          </g>
         ))}
 
-        {/* AI Rings */}
-
+        {/* Outer Rotating Cyber Telemetry Ring (Subtle Neutral) */}
         <motion.circle
           cx="110"
           cy="185"
-          r="95"
+          r="92"
           fill="none"
-          stroke="#22D3EE"
-          strokeWidth="1.5"
-          strokeDasharray="10 10"
+          stroke="rgba(245,245,240,0.2)"
+          strokeWidth="1"
+          strokeDasharray="8 12"
           animate={{
             rotate: 360,
           }}
           transition={{
-            duration: 10,
+            duration: 18,
             repeat: Infinity,
             ease: "linear",
           }}
@@ -135,19 +154,21 @@ export default function PoseSkeleton() {
           }}
         />
 
+        {/* Inner Counter-Rotating Telemetry Ring (Electric Lime) */}
         <motion.circle
           cx="110"
           cy="185"
-          r="65"
+          r="64"
           fill="none"
-          stroke="#10B981"
+          stroke="#B8F23A"
           strokeWidth="1"
-          strokeDasharray="5 8"
+          strokeOpacity="0.4"
+          strokeDasharray="4 8"
           animate={{
             rotate: -360,
           }}
           transition={{
-            duration: 7,
+            duration: 12,
             repeat: Infinity,
             ease: "linear",
           }}
@@ -158,4 +179,4 @@ export default function PoseSkeleton() {
       </svg>
     </motion.div>
   );
-}
+}

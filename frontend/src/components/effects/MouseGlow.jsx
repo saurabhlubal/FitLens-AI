@@ -32,7 +32,7 @@ export default function MouseGlow() {
         x,
         y,
       }}
-      className="pointer-events-none fixed left-0 top-0 z-0 h-[350px] w-[350px] rounded-full bg-emerald-400/10 blur-[120px]"
+      className="pointer-events-none fixed left-0 top-0 z-0 h-[350px] w-[350px] rounded-full bg-[#B8F23A]/[0.025] blur-[140px]"
     />
   );
 }
