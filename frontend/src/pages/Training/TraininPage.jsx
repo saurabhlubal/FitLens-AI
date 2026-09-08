@@ -1,7 +1,9 @@
+import { useNavigate } from "react-router-dom";
 import { Camera, Activity, Sparkles } from "lucide-react";
 import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
 
 export default function TrainingPage() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
       {/* AUTHENTICATED NAVBAR */}
@@ -41,9 +43,10 @@ export default function TrainingPage() {
               </p>
 
               <button
+                onClick={() => navigate("/camera")}
                 className="mt-6 rounded-full bg-[#B8F23A] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)]"
               >
-                Start Camera
+                Launch AI Camera
               </button>
             </div>
           </div>

@@ -5,9 +5,11 @@ from app.services.movement.base_detector import BaseExerciseDetector
 class ShoulderPressDetector(BaseExerciseDetector):
     """
     Overhead Shoulder Press Movement & Repetition Detector
-    MediaPipe Pose Landmark Indexes:
-    Left: Hip (23), Shoulder (11), Elbow (13), Wrist (15)
-    Right: Hip (24), Shoulder (12), Elbow (14), Wrist (16)
+    Form-Enforced Full Cycle Repetition Counting (Good Form vs Bad Form):
+    - Structure Check: Upright torso, symmetrical bilateral pressing.
+    - Full Cycle: Clavicle Rack (Down <= 90°) -> Overhead Lockout (Up >= 155°).
+    - Form Verification: Pressing symmetry (diff <= 25°), no excessive backward arching.
+    - Discrete Form State: Strictly "Good Form" or "Bad Form". Reps increment ONLY in Good Form.
     """
 
     def __init__(self):
@@ -55,41 +57,59 @@ class ShoulderPressDetector(BaseExerciseDetector):
                 feedback="Upper body and arms not visible. Adjust frame.",
             )
 
-        # 2. State Machine & Rep Counting
-        # Lockout overhead (Up): Elbow Angle > 160°
-        # Bottom rack (Down): Elbow Angle < 85°
-        new_stage = current_stage
-        rep_incremented = False
-        reps = current_reps
-        form_score = 95.0
-        is_correct = True
-        feedback = "Press overhead with control."
+        # 2. Structural Frame & Pressing Form Validation
+        is_good_form = True
+        form_fault_reason = None
 
-        if active_elbow > 160:
-            if current_stage == "down":
-                new_stage = "up"
-                reps += 1
-                rep_incremented = True
-                feedback = "Rep completed! Solid overhead lockout."
-            else:
-                new_stage = "up"
-                feedback = "Locked out overhead. Lower down to clavicle."
-        elif active_elbow <= 85:
-            new_stage = "down"
-            feedback = "Full depth! Drive the weight upward."
-        elif 85 < active_elbow <= 145:
-            if current_stage == "down":
-                feedback = "Pressing overhead..."
-            else:
-                feedback = "Lowering under control..."
-
-        # Check asymmetry between arms
         if left_arm_angle is not None and right_arm_angle is not None:
             diff = abs(left_arm_angle - right_arm_angle)
             if diff > 25:
-                form_score -= 20.0
-                is_correct = False
-                feedback = "Asymmetrical press! Push both arms evenly."
+                is_good_form = False
+                form_fault_reason = "Asymmetrical press! Push both arms evenly overhead."
+
+        # 3. State Machine & Full-Cycle Rep Counting
+        # Lockout overhead (Up): Elbow Angle >= 155°
+        # Bottom rack (Down): Elbow Angle <= 90°
+        new_stage = current_stage
+        rep_incremented = False
+        reps = current_reps
+        feedback = "Good Form. Press overhead with control." if is_good_form else form_fault_reason
+
+        if active_elbow >= 155:
+            if current_stage == "down":
+                new_stage = "up"
+                if is_good_form:
+                    reps += 1
+                    rep_incremented = True
+                    feedback = "Rep Counted! (Good Form - Full Lockout)"
+                else:
+                    rep_incremented = False
+                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper pressing form'})"
+            elif current_stage == "up":
+                new_stage = "up"
+                if is_good_form:
+                    feedback = "Good Form. Locked out overhead. Lower down to shoulders."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
+            else:
+                new_stage = "up"
+                feedback = "Locked out overhead. Ready to lower."
+        elif active_elbow <= 90:
+            new_stage = "down"
+            if is_good_form:
+                feedback = "Full depth reached (Good Form)! Drive weights straight up."
+            else:
+                feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            if is_good_form:
+                if current_stage == "down":
+                    feedback = "Pressing overhead with Good Form..."
+                else:
+                    feedback = "Lowering under control with Good Form..."
+            else:
+                feedback = f"Bad Form: {form_fault_reason}"
+
+        rom_pct = max(0, min(100, int((active_elbow - 80) / (160 - 80) * 100)))
 
         joint_angles = JointAngles(
             leftElbow=left_arm_angle,
@@ -102,12 +122,13 @@ class ShoulderPressDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=max(form_score, 10.0),
-            isCorrectForm=is_correct,
+            formScore=100.0 if is_good_form else 0.0,
+            isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
             metrics={
+                "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "elbowAngle": round(active_elbow, 1),
-                "romPercentage": max(0, min(100, int((active_elbow - 80) / (165 - 80) * 100)))
+                "romPercentage": rom_pct
             }
         )

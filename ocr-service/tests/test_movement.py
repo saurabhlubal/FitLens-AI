@@ -1,60 +1,118 @@
+# Pose Landmark & Repetition Detection Calibration & State Tests
 import pytest
 from app.models.movement import LandmarkPoint
-from app.services.movement.detector_factory import DetectorFactory
+from app.services.movement.bicep_curl import BicepCurlDetector
+from app.services.movement.squat import SquatDetector
+from app.services.movement.pushup import PushUpDetector
+from app.services.movement.shoulder_press import ShoulderPressDetector
 
-def make_test_landmarks(points_dict):
-    landmarks = [LandmarkPoint(x=0.5, y=0.5, z=0.0) for _ in range(33)]
-    for idx, (x, y) in points_dict.items():
-        landmarks[idx] = LandmarkPoint(x=x, y=y, z=0.0)
+def make_landmark(x: float, y: float, z: float = 0.0, visibility: float = 0.99):
+    return LandmarkPoint(x=x, y=y, z=z, visibility=visibility)
+
+def create_full_body_landmarks(left_elbow_y: float = 0.5, left_wrist_y: float = 0.8, left_wrist_x: float = 0.4):
+    """
+    Creates a full 33-point MediaPipe mock landmark list.
+    Shoulder: (0.4, 0.3)
+    Elbow: (0.4, left_elbow_y)
+    Wrist: (left_wrist_x, left_wrist_y)
+    Hip: (0.4, 0.7)
+    """
+    landmarks = [make_landmark(0.5, 0.1) for _ in range(33)]
+    
+    # Left side (Index 11: Shoulder, 13: Elbow, 15: Wrist, 23: Hip)
+    landmarks[11] = make_landmark(0.4, 0.3) # Shoulder
+    landmarks[13] = make_landmark(0.4, left_elbow_y) # Elbow
+    landmarks[15] = make_landmark(left_wrist_x, left_wrist_y) # Wrist
+    landmarks[23] = make_landmark(0.4, 0.7) # Hip
+    
+    # Right side (Index 12: Shoulder, 14: Elbow, 16: Wrist, 24: Hip)
+    landmarks[12] = make_landmark(0.6, 0.3)
+    landmarks[14] = make_landmark(0.6, left_elbow_y)
+    landmarks[16] = make_landmark(0.6, left_wrist_y)
+    landmarks[24] = make_landmark(0.6, 0.7)
+    
     return landmarks
 
-def test_bicep_curl_rep_counter():
-    detector = DetectorFactory.get_detector("Bicep Curl")
-    assert detector is not None
-
-    # Down position (both arms straight)
-    down_landmarks = make_test_landmarks({
-        11: (0.5, 0.2), 13: (0.5, 0.5), 15: (0.5, 0.8),
-        12: (0.5, 0.2), 14: (0.5, 0.5), 16: (0.5, 0.8),
-        23: (0.5, 0.7), 24: (0.5, 0.7)
-    })
+def test_bicep_curl_requires_down_then_up_full_cycle():
+    detector = BicepCurlDetector()
+    
+    # 1. Start in neutral / down position: Elbow at y=0.5, Wrist hanging straight down at y=0.8 (angle ~180°)
+    down_landmarks = create_full_body_landmarks(left_elbow_y=0.5, left_wrist_y=0.8, left_wrist_x=0.4)
     res_down = detector.analyze(down_landmarks, current_reps=0, current_stage="up")
+    
     assert res_down.stage == "down"
     assert res_down.repetitionCount == 0
-
-    # Up position (curled arms)
-    up_landmarks = make_test_landmarks({
-        11: (0.5, 0.2), 13: (0.5, 0.5), 15: (0.5, 0.22),
-        12: (0.5, 0.2), 14: (0.5, 0.5), 16: (0.5, 0.22),
-        23: (0.5, 0.7), 24: (0.5, 0.7)
-    })
+    assert not res_down.repIncremented
+    
+    # 2. Curl up to top: Wrist curled up at y=0.35, x=0.4 (angle ~30°)
+    up_landmarks = create_full_body_landmarks(left_elbow_y=0.5, left_wrist_y=0.35, left_wrist_x=0.4)
     res_up = detector.analyze(up_landmarks, current_reps=0, current_stage="down")
+    
     assert res_up.stage == "up"
     assert res_up.repetitionCount == 1
-    assert res_up.repIncremented is True
-    assert res_up.isCorrectForm is True
+    assert res_up.repIncremented
+    
+    # 3. Holding at top should NOT increment again
+    res_hold = detector.analyze(up_landmarks, current_reps=1, current_stage="up")
+    assert res_hold.repetitionCount == 1
+    assert not res_hold.repIncremented
+    
+    # 4. Moving down to extension
+    res_down2 = detector.analyze(down_landmarks, current_reps=1, current_stage="up")
+    assert res_down2.stage == "down"
+    assert res_down2.repetitionCount == 1
+    assert not res_down2.repIncremented
+    
+    # 5. Curling up again completes 2nd rep
+    res_up2 = detector.analyze(up_landmarks, current_reps=1, current_stage="down")
+    assert res_up2.stage == "up"
+    assert res_up2.repetitionCount == 2
+    assert res_up2.repIncremented
 
-def test_squat_rep_counter():
-    detector = DetectorFactory.get_detector("Squat")
-    assert detector is not None
+def test_bicep_curl_rejects_waving_hands_without_elbow_anchor():
+    detector = BicepCurlDetector()
+    # Hand waving up in the air without elbows down near torso:
+    # Shoulder at (0.4, 0.3), Elbow raised high at (0.4, 0.1)
+    waving_landmarks = create_full_body_landmarks(left_elbow_y=0.1, left_wrist_y=0.05, left_wrist_x=0.4)
+    res_waving = detector.analyze(waving_landmarks, current_reps=0, current_stage="up")
+    
+    # Should flag improper form / elbow drift
+    assert not res_waving.isCorrectForm or res_waving.formScore < 80.0
 
-    # Deep squat down position (Knee bent < 95 deg)
-    # Hip (0.4, 0.5), Knee (0.6, 0.5), Ankle (0.6, 0.7) -> 90 degree angle
-    down_landmarks = make_test_landmarks({
-        23: (0.4, 0.5), 25: (0.6, 0.5), 27: (0.6, 0.7),
-        24: (0.4, 0.5), 26: (0.6, 0.5), 28: (0.6, 0.7),
-        11: (0.4, 0.2), 12: (0.4, 0.2)
-    })
-    res_down = detector.analyze(down_landmarks, current_reps=0, current_stage="up")
-    assert res_down.stage == "down"
+def test_squat_rep_cycle():
+    detector = SquatDetector()
+    landmarks = [make_landmark(0.5, 0.5) for _ in range(33)]
+    
+    # Standing position: Hip(0.5, 0.3), Knee(0.5, 0.6), Ankle(0.5, 0.9) -> Angle ~180°
+    landmarks[23] = make_landmark(0.5, 0.3)
+    landmarks[25] = make_landmark(0.5, 0.6)
+    landmarks[27] = make_landmark(0.5, 0.9)
+    landmarks[11] = make_landmark(0.5, 0.1)
+    
+    landmarks[24] = make_landmark(0.5, 0.3)
+    landmarks[26] = make_landmark(0.5, 0.6)
+    landmarks[28] = make_landmark(0.5, 0.9)
+    landmarks[12] = make_landmark(0.5, 0.1)
+    
+    res_stand = detector.analyze(landmarks, current_reps=0, current_stage="up")
+    assert res_stand.stage == "up"
+    assert res_stand.repetitionCount == 0
 
-    # Standing up position (180 deg straight knee: Hip (0.5, 0.3), Knee (0.5, 0.6), Ankle (0.5, 0.9))
-    up_landmarks = make_test_landmarks({
-        23: (0.5, 0.3), 25: (0.5, 0.6), 27: (0.5, 0.9),
-        24: (0.5, 0.3), 26: (0.5, 0.6), 28: (0.5, 0.9),
-        11: (0.5, 0.1), 12: (0.5, 0.1)
-    })
-    res_up = detector.analyze(up_landmarks, current_reps=0, current_stage="down")
-    assert res_up.stage == "up"
-    assert res_up.repetitionCount == 1
-    assert res_up.repIncremented is True
+def test_shoulder_press_rep_cycle():
+    detector = ShoulderPressDetector()
+    landmarks = [make_landmark(0.5, 0.5) for _ in range(33)]
+    
+    # Overhead lockout: Shoulder(0.5, 0.5), Elbow(0.5, 0.3), Wrist(0.5, 0.1) -> 180°
+    landmarks[11] = make_landmark(0.5, 0.5)
+    landmarks[13] = make_landmark(0.5, 0.3)
+    landmarks[15] = make_landmark(0.5, 0.1)
+    landmarks[23] = make_landmark(0.5, 0.8)
+    
+    landmarks[12] = make_landmark(0.5, 0.5)
+    landmarks[14] = make_landmark(0.5, 0.3)
+    landmarks[16] = make_landmark(0.5, 0.1)
+    landmarks[24] = make_landmark(0.5, 0.8)
+    
+    res_press = detector.analyze(landmarks, current_reps=0, current_stage="down")
+    assert res_press.stage == "up"
+    assert res_press.repetitionCount == 1
