@@ -5,9 +5,11 @@ from app.services.movement.base_detector import BaseExerciseDetector
 class SquatDetector(BaseExerciseDetector):
     """
     Squat Movement & Repetition Detector
-    MediaPipe Pose Landmark Indexes:
-    Left: Hip (23), Knee (25), Ankle (27), Shoulder (11)
-    Right: Hip (24), Knee (26), Ankle (28), Shoulder (12)
+    Form-Enforced Full Cycle Repetition Counting (Good Form vs Bad Form):
+    - Structure Check: Hips, knees, ankles aligned, shoulders visible.
+    - Full Cycle: Standing (Up > 155°) -> Deep Squat (Down <= 100°).
+    - Form Verification: Chest upright (hip angle >= 65°), knees tracking cleanly.
+    - Discrete Form State: Strictly "Good Form" or "Bad Form". Reps increment ONLY in Good Form.
     """
 
     def __init__(self):
@@ -55,43 +57,63 @@ class SquatDetector(BaseExerciseDetector):
                 repIncremented=False,
                 formScore=0.0,
                 isCorrectForm=False,
-                feedback="Legs not detected. Ensure your full body is visible.",
+                feedback="Legs not clearly detected. Ensure your full body is visible.",
             )
 
-        # 2. State Machine & Rep Counting
-        # Standing (Up): Knee Angle > 160°
-        # Deep Squat (Down): Knee Angle < 95°
+        # 2. Structural Frame & Form Validation
+        is_good_form = True
+        form_fault_reason = None
+
+        # Check back angle / forward trunk lean
+        torso_angle = left_hip_angle or right_hip_angle
+        if torso_angle is not None and torso_angle < 60:
+            is_good_form = False
+            form_fault_reason = "Chest collapsing forward! Keep spine neutral and eyes forward."
+
+        # 3. State Machine & Full-Cycle Rep Counting
+        # Standing (Up): Knee Angle > 155°
+        # Deep Squat (Down): Knee Angle <= 100° (Optimal ~90°)
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
-        form_score = 95.0
-        is_correct = True
-        feedback = "Good stance! Keep your chest proud."
+        feedback = "Good Form. Keep chest proud." if is_good_form else form_fault_reason
 
-        if active_knee > 160:
+        if active_knee > 155:
             if current_stage == "down":
                 new_stage = "up"
-                reps += 1
-                rep_incremented = True
-                feedback = "Rep completed! Good lockout."
+                if is_good_form:
+                    reps += 1
+                    rep_incremented = True
+                    feedback = "Rep Counted! (Good Form - Full Extension)"
+                else:
+                    rep_incremented = False
+                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper squat mechanics'})"
+            elif current_stage == "up":
+                new_stage = "up"
+                if is_good_form:
+                    feedback = "Good Form. Standing tall. Lower hips into squat."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
             else:
                 new_stage = "up"
-                feedback = "Standing tall. Lower your hips into a squat."
-        elif active_knee <= 95:
+                feedback = "Standing tall. Ready to squat."
+        elif active_knee <= 100:
             new_stage = "down"
-            feedback = "Great depth! Drive through your heels to stand up."
-        elif 95 < active_knee <= 140:
-            if current_stage == "up":
-                feedback = "Squatting down... Go a little lower for full depth."
+            if is_good_form:
+                feedback = "Great depth reached (Good Form)! Drive through heels to stand."
             else:
-                feedback = "Pushing back up..."
+                feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            # Transit zone
+            if is_good_form:
+                if current_stage == "up":
+                    feedback = "Squatting down with Good Form..."
+                else:
+                    feedback = "Driving back up with Good Form..."
+            else:
+                feedback = f"Bad Form: {form_fault_reason}"
 
-        # Check back angle / excessive forward lean
-        torso_angle = left_hip_angle or right_hip_angle
-        if torso_angle is not None and torso_angle < 65:
-            form_score -= 25.0
-            is_correct = False
-            feedback = "Chest falling forward! Keep your spine neutral and eyes forward."
+        rom_pct = max(0, min(100, int((165 - active_knee) / (165 - 85) * 100)))
 
         joint_angles = JointAngles(
             leftKnee=left_knee_angle,
@@ -106,13 +128,14 @@ class SquatDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=max(form_score, 10.0),
-            isCorrectForm=is_correct,
+            formScore=100.0 if is_good_form else 0.0,
+            isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
             metrics={
+                "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "kneeAngle": round(active_knee, 1),
-                "squatDepth": "Full" if active_knee <= 90 else "Partial",
-                "romPercentage": max(0, min(100, int((170 - active_knee) / (170 - 80) * 100)))
+                "squatDepth": "Full" if active_knee <= 95 else "Partial",
+                "romPercentage": rom_pct
             }
         )

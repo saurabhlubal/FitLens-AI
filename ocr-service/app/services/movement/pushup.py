@@ -5,9 +5,11 @@ from app.services.movement.base_detector import BaseExerciseDetector
 class PushUpDetector(BaseExerciseDetector):
     """
     Push-Up Movement & Repetition Detector
-    MediaPipe Pose Landmark Indexes:
-    Left: Shoulder (11), Elbow (13), Wrist (15), Hip (23), Ankle (27)
-    Right: Shoulder (12), Elbow (14), Wrist (16), Hip (24), Ankle (28)
+    Form-Enforced Full Cycle Repetition Counting (Good Form vs Bad Form):
+    - Structure Check: Solid plank posture (Shoulder -> Hip -> Ankle straight line).
+    - Full Cycle: Top Plank (Up > 150°) -> Bottom Chest to Floor (Down <= 95°).
+    - Form Verification: Core braced, no hip sag (body angle < 150°) or hip pike (body angle > 195°).
+    - Discrete Form State: Strictly "Good Form" or "Bad Form". Reps increment ONLY in Good Form.
     """
 
     def __init__(self):
@@ -61,40 +63,62 @@ class PushUpDetector(BaseExerciseDetector):
                 feedback="Upper body not visible. Adjust camera angle.",
             )
 
-        # 2. State Machine & Rep Counting
-        # Top plank (Up): Elbow Angle > 155°
-        # Bottom chest to floor (Down): Elbow Angle < 90°
+        # 2. Structural Frame & Plank Form Validation
+        is_good_form = True
+        form_fault_reason = None
+
+        body_angle = left_body_angle or right_body_angle
+        if body_angle is not None:
+            if body_angle < 145:
+                is_good_form = False
+                form_fault_reason = "Hips sagging! Tighten core and glutes to align spine."
+            elif body_angle > 195:
+                is_good_form = False
+                form_fault_reason = "Hips piked too high! Maintain a flat plank."
+
+        # 3. State Machine & Full-Cycle Rep Counting
+        # Top plank (Up): Elbow Angle > 150°
+        # Bottom chest to floor (Down): Elbow Angle <= 95°
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
-        form_score = 95.0
-        is_correct = True
-        feedback = "Solid push-up plank. Lower under control."
+        feedback = "Good Form. Solid push-up plank." if is_good_form else form_fault_reason
 
-        if active_elbow > 155:
+        if active_elbow > 150:
             if current_stage == "down":
                 new_stage = "up"
-                reps += 1
-                rep_incremented = True
-                feedback = "Rep completed! Excellent push."
+                if is_good_form:
+                    reps += 1
+                    rep_incremented = True
+                    feedback = "Rep Counted! (Good Form - Full Press)"
+                else:
+                    rep_incremented = False
+                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper plank'})"
+            elif current_stage == "up":
+                new_stage = "up"
+                if is_good_form:
+                    feedback = "Good Form. Top plank held. Lower chest down."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
             else:
                 new_stage = "up"
-                feedback = "Plank held. Lower your chest down."
-        elif active_elbow <= 90:
+                feedback = "Plank held. Ready for push-ups."
+        elif active_elbow <= 95:
             new_stage = "down"
-            feedback = "Full depth reached! Press straight up."
-        elif 90 < active_elbow <= 140:
-            if current_stage == "up":
-                feedback = "Lowering down..."
+            if is_good_form:
+                feedback = "Full depth reached (Good Form)! Press straight up."
             else:
-                feedback = "Pushing up..."
+                feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            if is_good_form:
+                if current_stage == "up":
+                    feedback = "Lowering chest with Good Form..."
+                else:
+                    feedback = "Pushing up with Good Form..."
+            else:
+                feedback = f"Bad Form: {form_fault_reason}"
 
-        # Body alignment check (avoid hip sag or pike)
-        body_angle = left_body_angle or right_body_angle
-        if body_angle is not None and (body_angle < 150 or body_angle > 195):
-            form_score -= 30.0
-            is_correct = False
-            feedback = "Keep your core tight! Don't let hips sag or pike up."
+        rom_pct = max(0, min(100, int((160 - active_elbow) / (160 - 85) * 100)))
 
         joint_angles = JointAngles(
             leftElbow=left_arm_angle,
@@ -108,13 +132,14 @@ class PushUpDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=max(form_score, 10.0),
-            isCorrectForm=is_correct,
+            formScore=100.0 if is_good_form else 0.0,
+            isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
             metrics={
+                "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "elbowAngle": round(active_elbow, 1),
                 "bodyPlankAngle": round(body_angle, 1) if body_angle else None,
-                "romPercentage": max(0, min(100, int((160 - active_elbow) / (160 - 80) * 100)))
+                "romPercentage": rom_pct
             }
         )

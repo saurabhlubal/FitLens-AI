@@ -5,9 +5,11 @@ from app.services.movement.base_detector import BaseExerciseDetector
 class BicepCurlDetector(BaseExerciseDetector):
     """
     Bicep Curl Movement & Repetition Detector
-    MediaPipe Pose Landmark Indexes:
-    Left: Shoulder (11), Elbow (13), Wrist (15)
-    Right: Shoulder (12), Elbow (14), Wrist (16)
+    Full Cycle Rep Counting with Form Validation:
+    - Extended bottom (Down): angle >= 140°
+    - Peak curl (Up): angle <= 50°
+    - Rep increment: triggers exactly when moving from 'down' to 'up' in Good Form.
+    - Good Form verification: Elbows below shoulders, no severe arm flaring/swinging.
     """
 
     def __init__(self):
@@ -22,30 +24,29 @@ class BicepCurlDetector(BaseExerciseDetector):
     ) -> MovementAnalysisResponse:
         session_data = session_data or {}
         
-        # 1. Extract Arm Keypoints
+        # 1. Extract Arm and Torso Keypoints
         l_shoulder = self.get_landmark(landmarks, 11)
         l_elbow = self.get_landmark(landmarks, 13)
         l_wrist = self.get_landmark(landmarks, 15)
+        l_hip = self.get_landmark(landmarks, 23)
 
         r_shoulder = self.get_landmark(landmarks, 12)
         r_elbow = self.get_landmark(landmarks, 14)
         r_wrist = self.get_landmark(landmarks, 16)
+        r_hip = self.get_landmark(landmarks, 24)
 
-        left_angle = self.calculate_angle(l_shoulder, l_elbow, l_wrist)
-        right_angle = self.calculate_angle(r_shoulder, r_elbow, r_wrist)
+        # Calculate Elbow Flexion Angles (Shoulder -> Elbow -> Wrist)
+        left_elbow_angle = self.calculate_angle(l_shoulder, l_elbow, l_wrist)
+        right_elbow_angle = self.calculate_angle(r_shoulder, r_elbow, r_wrist)
 
-        # Determine active arm (or take average/primary visible arm)
-        active_angle = None
-        side = "both"
-        if left_angle is not None and right_angle is not None:
-            active_angle = min(left_angle, right_angle)  # take more flexed arm
-        elif left_angle is not None:
-            active_angle = left_angle
-            side = "left"
-        elif right_angle is not None:
-            active_angle = right_angle
-            side = "right"
-        else:
+        # Calculate Upper Arm / Torso Angles (Hip -> Shoulder -> Elbow) to check elbow anchor
+        left_shoulder_angle = self.calculate_angle(l_hip, l_shoulder, l_elbow) if (l_hip and l_shoulder and l_elbow) else None
+        right_shoulder_angle = self.calculate_angle(r_hip, r_shoulder, r_elbow) if (r_hip and r_shoulder and r_elbow) else None
+
+        left_arm_valid = left_elbow_angle is not None
+        right_arm_valid = right_elbow_angle is not None
+
+        if not left_arm_valid and not right_arm_valid:
             return MovementAnalysisResponse(
                 success=False,
                 exerciseName=self.name,
@@ -54,54 +55,104 @@ class BicepCurlDetector(BaseExerciseDetector):
                 repIncremented=False,
                 formScore=0.0,
                 isCorrectForm=False,
-                feedback="Arm landmarks not clearly visible. Step into view.",
+                feedback="Step into the camera frame so your shoulders, elbows, and hands are visible.",
             )
 
-        # 2. State Machine & Rep Counting
-        # Full Extension (Down): Angle > 155°
-        # Full Flexion/Curl (Up): Angle < 45°
+        # Select primary active arm
+        side = "both"
+        active_angle = None
+        active_shoulder_angle = None
+
+        if left_arm_valid and right_arm_valid:
+            if left_elbow_angle <= right_elbow_angle:
+                active_angle = left_elbow_angle
+                active_shoulder_angle = left_shoulder_angle
+                side = "left"
+            else:
+                active_angle = right_elbow_angle
+                active_shoulder_angle = right_shoulder_angle
+                side = "right"
+        elif left_arm_valid:
+            active_angle = left_elbow_angle
+            active_shoulder_angle = left_shoulder_angle
+            side = "left"
+        else:
+            active_angle = right_elbow_angle
+            active_shoulder_angle = right_shoulder_angle
+            side = "right"
+
+        # 2. Structural Frame & Anatomical Anchor Validation
+        shoulder = l_shoulder if side == "left" else r_shoulder
+        elbow = l_elbow if side == "left" else r_elbow
+
+        in_bicep_frame = True
+        is_good_form = True
+        form_fault_reason = None
+
+        # Check A: Elbows must be below shoulders (cannot wave hands up in the air with high elbows)
+        if shoulder and elbow and elbow.y < shoulder.y - 0.05:
+            in_bicep_frame = False
+            is_good_form = False
+            form_fault_reason = "Elbow raised too high! Anchor elbows at your ribs."
+
+        # Check B: Upper arm / Torso angle (Shoulder drift / swinging)
+        if active_shoulder_angle is not None and active_shoulder_angle > 45:
+            is_good_form = False
+            form_fault_reason = "Keep elbows pinned to your ribs. Avoid swinging."
+
+        # 3. State Machine & Continuous Multi-Rep Counting
+        # Extension (Down): Elbow Angle >= 140° (Natural full extension)
+        # Peak Flexion (Up): Elbow Angle <= 50° (Full curl)
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
-        form_score = 95.0
-        is_correct = True
-        feedback = "Good form! Keep going."
+        feedback = "Good Form. Keep going!" if is_good_form else form_fault_reason
 
-        if active_angle > 155:
-            new_stage = "down"
-            feedback = "Arm extended. Ready for next rep."
-        elif active_angle < 50:
-            if current_stage == "down":
-                new_stage = "up"
-                reps += 1
-                rep_incremented = True
-                feedback = "Rep completed! Great contraction."
+        if in_bicep_frame:
+            if active_angle >= 140:
+                new_stage = "down"
+                if is_good_form:
+                    feedback = "Good Form. Arms extended down. Ready to curl."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
+            elif active_angle <= 50:
+                if current_stage == "down":
+                    new_stage = "up"
+                    if is_good_form:
+                        reps += 1
+                        rep_incremented = True
+                        feedback = "Rep Counted! (Good Form)"
+                    else:
+                        rep_incremented = False
+                        feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper form'})"
+                elif current_stage == "up":
+                    new_stage = "up"
+                    if is_good_form:
+                        feedback = "Holding contraction. Lower arms down for next rep."
+                    else:
+                        feedback = f"Bad Form: {form_fault_reason}"
+                else:
+                    new_stage = "up"
+                    feedback = "Extend arms down to begin next rep."
             else:
-                new_stage = "up"
-                feedback = "Holding at the top."
-        elif 50 <= active_angle <= 155:
-            if current_stage == "down":
-                feedback = "Curling up... Squeeze your biceps."
-            else:
-                feedback = "Lowering under control..."
+                # In transit between 50° and 140°
+                if is_good_form:
+                    if current_stage == "down":
+                        feedback = "Curling up with Good Form..."
+                    else:
+                        feedback = "Lowering arms down to full extension..."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            feedback = f"Bad Form: {form_fault_reason or 'Align arms into bicep curl structure.'}"
 
-        # Form Checks
-        # Check shoulder drift (elbow swinging forward excessively)
-        hip = self.get_landmark(landmarks, 23 if side == "left" else 24)
-        shoulder = l_shoulder if side == "left" else r_shoulder
-        elbow = l_elbow if side == "left" else r_elbow
-        
-        shoulder_angle = self.calculate_angle(hip, shoulder, elbow) if (hip and shoulder and elbow) else None
-        if shoulder_angle is not None and shoulder_angle > 35:
-            form_score -= 20.0
-            is_correct = False
-            feedback = "Keep your elbows pinned to your sides! Avoid swinging."
+        rom_pct = max(0, min(100, int((150 - active_angle) / (150 - 45) * 100)))
 
         joint_angles = JointAngles(
-            leftElbow=left_angle,
-            rightElbow=right_angle,
-            leftShoulder=shoulder_angle if side == "left" else None,
-            rightShoulder=shoulder_angle if side == "right" else None
+            leftElbow=left_elbow_angle,
+            rightElbow=right_elbow_angle,
+            leftShoulder=left_shoulder_angle,
+            rightShoulder=right_shoulder_angle
         )
 
         return MovementAnalysisResponse(
@@ -110,13 +161,15 @@ class BicepCurlDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=max(form_score, 10.0),
-            isCorrectForm=is_correct,
+            formScore=100.0 if is_good_form else 0.0,
+            isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
             metrics={
-                "flexionAngle": active_angle,
+                "formStatus": "Good Form" if is_good_form else "Bad Form",
+                "flexionAngle": round(active_angle, 1),
                 "detectedSide": side,
-                "romPercentage": max(0, min(100, int((160 - active_angle) / (160 - 40) * 100)))
+                "inBicepFrame": in_bicep_frame,
+                "romPercentage": rom_pct
             }
         )

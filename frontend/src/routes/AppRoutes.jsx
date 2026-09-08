@@ -113,6 +113,15 @@ export default function AppRoutes() {
         }
       />
 
+      <Route
+        path="/ai-analysis/:exerciseId"
+        element={
+          <ProtectedRoute>
+            <CameraAnalysisPage />
+          </ProtectedRoute>
+        }
+      />
+
 
       {/* =========================
           TRAINING
