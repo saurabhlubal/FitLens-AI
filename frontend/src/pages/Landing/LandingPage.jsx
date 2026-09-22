@@ -14,7 +14,7 @@ import MouseGlow from "../../components/effects/MouseGlow";
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#060608] text-[#F5F5F0]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#FAFAF8] text-slate-900">
       <MouseGlow />
 
       <Navbar />

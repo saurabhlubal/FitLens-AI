@@ -554,7 +554,7 @@ export default function CameraAnalysisPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
       {/* AUTHENTICATED NAVBAR */}
       <AuthenticatedNavbar />
 
@@ -566,22 +566,22 @@ export default function CameraAnalysisPage() {
               {workoutContext && (
                 <button
                   onClick={() => navigate(`/workouts/${workoutContext.workoutId}`)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#0c0c0e] px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-[#D2D2CC] transition hover:border-[#B8F23A]/40 hover:text-white"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950"
                 >
                   <ArrowLeft size={14} />
                   Back to Workout
                 </button>
               )}
-              <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-[#B8F23A]">
+              <span className="inline-block rounded-full border border-lime-300/80 bg-lime-100/60 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-900">
                 AI Biomechanics Engine
               </span>
             </div>
 
-            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-[#F5F5F0]">
+            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-slate-950">
               {workoutContext ? `${workoutContext.exercise.exerciseName} Analysis` : `${exercise} AI Coach`}
             </h1>
 
-            <p className="mt-1 text-sm sm:text-base text-[#A8A8A2] leading-relaxed">
+            <p className="mt-1 text-sm sm:text-base text-slate-600 leading-relaxed">
               Real-time computer vision movement detection, anti-jitter skeletal landmark tracking &amp; full-cycle repetition counting.
             </p>
           </div>
@@ -589,13 +589,13 @@ export default function CameraAnalysisPage() {
           {/* TAB SWITCHER & ACTION BUTTONS */}
           <div className="flex flex-wrap items-center gap-3">
             {/* View Mode Toggle */}
-            <div className="flex rounded-xl border border-white/10 bg-[#121216] p-1">
+            <div className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-xs">
               <button
                 onClick={() => setActiveTab("vision")}
                 className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "vision"
-                    ? "bg-[#B8F23A] text-[#060608] shadow-[0_0_15px_rgba(184,242,58,0.3)]"
-                    : "text-[#8E8E92] hover:text-white"
+                    ? "bg-[#B8F23A] text-slate-950 shadow-xs"
+                    : "text-slate-600 hover:text-slate-950"
                 }`}
               >
                 <Camera size={14} />
@@ -605,8 +605,8 @@ export default function CameraAnalysisPage() {
                 onClick={() => setActiveTab("guide")}
                 className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "guide"
-                    ? "bg-[#B8F23A] text-[#060608] shadow-[0_0_15px_rgba(184,242,58,0.3)]"
-                    : "text-[#8E8E92] hover:text-white"
+                    ? "bg-[#B8F23A] text-slate-950 shadow-xs"
+                    : "text-slate-600 hover:text-slate-950"
                 }`}
               >
                 <BookOpen size={14} />
@@ -616,7 +616,7 @@ export default function CameraAnalysisPage() {
 
             <button
               onClick={resetSession}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#141418] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#D2D2CC] transition hover:border-white/20 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950"
             >
               <RefreshCw size={14} />
               Reset Reps
@@ -626,7 +626,7 @@ export default function CameraAnalysisPage() {
               <button
                 onClick={handleSaveToWorkout}
                 disabled={savingFeedback}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#B8F23A] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)] disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#B8F23A] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition-all hover:bg-[#a6de2e] shadow-xs disabled:opacity-50"
               >
                 <Save size={14} />
                 {savingFeedback ? "Saving..." : saveSuccess ? "Saved to Workout!" : "Save to Workout"}
@@ -641,11 +641,11 @@ export default function CameraAnalysisPage() {
         {activeTab === "vision" && (
           <div className="grid gap-8 lg:grid-cols-3">
             {/* CAMERA STAGE (2 COLS) */}
-            <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-8 lg:col-span-2">
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8 lg:col-span-2 shadow-xs">
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <Dumbbell size={18} className="text-[#B8F23A]" />
-                  <h2 className="text-lg font-bold uppercase tracking-wider text-[#F5F5F0]">
+                  <Dumbbell size={18} className="text-slate-900" />
+                  <h2 className="text-lg font-bold uppercase tracking-wider text-slate-950">
                     Live Visual Stream
                   </h2>
                 </div>
@@ -654,15 +654,15 @@ export default function CameraAnalysisPage() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider ${
                       cameraOn
-                        ? "border border-[#B8F23A]/30 bg-[#B8F23A]/10 text-[#B8F23A]"
-                        : "border border-white/10 bg-[#141418] text-[#8E8E92]"
+                        ? "border border-lime-300 bg-lime-100 text-slate-900"
+                        : "border border-slate-200 bg-slate-100 text-slate-600"
                     }`}
                   >
                     {cameraOn ? "Camera Active" : "Camera Idle"}
                   </span>
 
                   {detecting && (
-                    <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider text-sky-400 animate-pulse">
+                    <span className="rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider text-sky-700 animate-pulse">
                       ML 12 FPS
                     </span>
                   )}
@@ -670,7 +670,7 @@ export default function CameraAnalysisPage() {
               </div>
 
               {/* VIDEO & SKELETON CANVAS */}
-              <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-[#040406] shadow-2xl">
+              <div className="relative aspect-video overflow-hidden rounded-2xl border border-slate-900 bg-[#040406] shadow-xl">
                 <video
                   ref={videoRef}
                   autoPlay
@@ -761,12 +761,12 @@ export default function CameraAnalysisPage() {
               </div>
 
               {/* ANATOMICAL COLOR LEGEND */}
-              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-white/[0.06] bg-[#121216] px-4 py-2.5">
-                <span className="text-[10px] font-mono font-bold uppercase text-[#8E8E92]">
+              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
+                <span className="text-[10px] font-mono font-bold uppercase text-slate-500">
                   ResNet Landmarks:
                 </span>
                 {Object.entries(ANATOMICAL_PALETTE).map(([key, val]) => (
-                  <div key={key} className="flex items-center gap-1.5 text-xs font-mono text-[#D2D2CC]">
+                  <div key={key} className="flex items-center gap-1.5 text-xs font-mono font-medium text-slate-700">
                     <span
                       className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px]"
                       style={{ backgroundColor: val.color, boxShadow: `0 0 8px ${val.color}` }}
@@ -781,14 +781,14 @@ export default function CameraAnalysisPage() {
                 {!cameraOn ? (
                   <button
                     onClick={startCamera}
-                    className="rounded-full bg-[#B8F23A] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)]"
+                    className="rounded-full bg-[#B8F23A] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition-all duration-300 hover:bg-[#a6de2e] shadow-xs"
                   >
                     Start Camera
                   </button>
                 ) : (
                   <button
                     onClick={stopCamera}
-                    className="rounded-full border border-red-500/30 bg-red-500/10 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-500/20"
+                    className="rounded-full border border-red-200 bg-red-50 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-red-600 transition hover:bg-red-100"
                   >
                     Stop Camera
                   </button>
@@ -798,14 +798,14 @@ export default function CameraAnalysisPage() {
                   <button
                     onClick={startDetection}
                     disabled={!cameraOn}
-                    className="rounded-full bg-[#B8F23A] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)] disabled:cursor-not-allowed disabled:opacity-30"
+                    className="rounded-full bg-slate-950 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-all duration-300 hover:bg-slate-800 shadow-xs disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Start AI Form Tracking
                   </button>
                 ) : (
                   <button
                     onClick={stopDetection}
-                    className="rounded-full border border-orange-500/30 bg-orange-500/10 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-orange-400 transition hover:bg-orange-500/20"
+                    className="rounded-full border border-amber-300 bg-amber-50 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-amber-800 transition hover:bg-amber-100"
                   >
                     Pause AI Detection
                   </button>
@@ -816,22 +816,22 @@ export default function CameraAnalysisPage() {
               <div
                 className={`mt-4 rounded-xl border p-4 transition-all duration-300 ${
                   !isCorrectForm
-                    ? "border-red-500/40 bg-red-950/20"
-                    : "border-white/[0.06] bg-[#141418]"
+                    ? "border-red-200 bg-red-50/80 text-red-900"
+                    : "border-slate-200 bg-slate-50 text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <Activity
                     size={16}
-                    className={!isCorrectForm ? "text-red-400" : "text-[#B8F23A]"}
+                    className={!isCorrectForm ? "text-red-500" : "text-emerald-600"}
                   />
-                  <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#8E8E92]">
+                  <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
                     Live Coaching Cue
                   </p>
                 </div>
                 <p
                   className={`mt-1.5 text-sm font-semibold ${
-                    !isCorrectForm ? "text-red-300" : "text-[#F5F5F0]"
+                    !isCorrectForm ? "text-red-900" : "text-slate-900"
                   }`}
                 >
                   {feedback}
@@ -842,14 +842,14 @@ export default function CameraAnalysisPage() {
             {/* TELEMETRY & CONTROLS SIDEBAR (1 COL) */}
             <div className="space-y-6">
               {/* EXERCISE SELECTOR */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-7">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold uppercase tracking-wider text-[#F5F5F0]">
+                  <h2 className="text-base font-bold uppercase tracking-wider text-slate-950">
                     Target Exercise
                   </h2>
                   <button
                     onClick={() => setActiveTab("guide")}
-                    className="text-xs font-mono font-bold text-[#B8F23A] hover:underline"
+                    className="text-xs font-bold text-slate-900 hover:text-lime-700 underline underline-offset-2"
                   >
                     View Guide →
                   </button>
@@ -862,7 +862,7 @@ export default function CameraAnalysisPage() {
                     resetSession();
                   }}
                   disabled={detecting}
-                  className="w-full rounded-xl border border-white/[0.08] bg-[#141418] p-3 text-sm text-[#F5F5F0] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30 disabled:opacity-60"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white disabled:opacity-60"
                 >
                   <option value="Bicep Curl">Bicep Curl</option>
                   <option value="Squat">Squat</option>
@@ -877,26 +877,26 @@ export default function CameraAnalysisPage() {
               </div>
 
               {/* METRICS HUD */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-7">
-                <h2 className="mb-4 text-base font-bold uppercase tracking-wider text-[#F5F5F0]">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
+                <h2 className="mb-4 text-base font-bold uppercase tracking-wider text-slate-950">
                   Session Telemetry
                 </h2>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-white/[0.06] bg-[#141418] p-4 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E92]">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                       Total Reps
                     </p>
-                    <p className="mt-1 text-3xl font-black font-mono text-[#B8F23A]">{reps}</p>
+                    <p className="mt-1 text-3xl font-black font-mono text-slate-950">{reps}</p>
                   </div>
 
-                  <div className="rounded-xl border border-white/[0.06] bg-[#141418] p-4 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E92]">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                       Form Status
                     </p>
                     <p
                       className={`mt-2 text-lg font-black font-mono uppercase tracking-wider ${
-                        isCorrectForm ? "text-[#B8F23A]" : "text-red-400"
+                        isCorrectForm ? "text-emerald-600" : "text-red-500"
                       }`}
                     >
                       {formStatus}
@@ -906,47 +906,47 @@ export default function CameraAnalysisPage() {
 
                 {/* JOINT ANGLES DETAIL */}
                 {jointAngles && Object.keys(jointAngles).some((k) => jointAngles[k] !== null) && (
-                  <div className="mt-4 border-t border-white/[0.06] pt-4 space-y-2 text-xs font-mono text-[#A8A8A2]">
+                  <div className="mt-4 border-t border-slate-100 pt-4 space-y-2 text-xs font-mono text-slate-600">
                     {jointAngles.leftElbow !== null && jointAngles.leftElbow !== undefined && (
                       <div className="flex justify-between">
                         <span>Left Elbow Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.leftElbow}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.leftElbow}°</span>
                       </div>
                     )}
                     {jointAngles.rightElbow !== null && jointAngles.rightElbow !== undefined && (
                       <div className="flex justify-between">
                         <span>Right Elbow Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.rightElbow}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.rightElbow}°</span>
                       </div>
                     )}
                     {jointAngles.leftShoulder !== null && jointAngles.leftShoulder !== undefined && (
                       <div className="flex justify-between">
                         <span>Left Shoulder Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.leftShoulder}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.leftShoulder}°</span>
                       </div>
                     )}
                     {jointAngles.rightShoulder !== null && jointAngles.rightShoulder !== undefined && (
                       <div className="flex justify-between">
                         <span>Right Shoulder Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.rightShoulder}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.rightShoulder}°</span>
                       </div>
                     )}
                     {jointAngles.leftKnee !== null && jointAngles.leftKnee !== undefined && (
                       <div className="flex justify-between">
                         <span>Left Knee Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.leftKnee}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.leftKnee}°</span>
                       </div>
                     )}
                     {jointAngles.rightKnee !== null && jointAngles.rightKnee !== undefined && (
                       <div className="flex justify-between">
                         <span>Right Knee Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.rightKnee}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.rightKnee}°</span>
                       </div>
                     )}
                     {jointAngles.backAngle !== null && jointAngles.backAngle !== undefined && (
                       <div className="flex justify-between">
                         <span>Torso / Spine Angle:</span>
-                        <span className="font-bold text-[#F5F5F0]">{jointAngles.backAngle}°</span>
+                        <span className="font-bold text-slate-900">{jointAngles.backAngle}°</span>
                       </div>
                     )}
                   </div>
@@ -954,24 +954,24 @@ export default function CameraAnalysisPage() {
               </div>
 
               {/* QUICK BIOMECHANICS SUMMARY */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-7">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
                 <div className="flex items-center gap-2 mb-3">
-                  <Target size={16} className="text-[#B8F23A]" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-[#F5F5F0]">
+                  <Target size={16} className="text-slate-900" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-950">
                     Rep Counting Rules
                   </h3>
                 </div>
-                <ul className="space-y-2 text-xs text-[#A8A8A2] leading-relaxed">
+                <ul className="space-y-2 text-xs text-slate-600 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <span className="text-[#B8F23A] font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span><strong>Form Verification:</strong> Reps increment ONLY when executed in <strong>Good Form</strong>.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#B8F23A] font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span><strong>1 Full Cycle:</strong> Must start from extended bottom (&gt;150°) then curl up to contraction (&lt;45°).</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#B8F23A] font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span><strong>Elbow Anchor:</strong> Pinned to ribs throughout. Swinging arms triggers <strong>Bad Form</strong> and discards rep.</span>
                   </li>
                 </ul>
@@ -986,33 +986,33 @@ export default function CameraAnalysisPage() {
         {activeTab === "guide" && (
           <div className="space-y-8">
             {/* GUIDE HERO BANNER */}
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-[#0c0c10] via-[#14141c] to-[#0c0c10] p-8 sm:p-12 shadow-2xl">
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-8 sm:p-12 shadow-xs">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-3 py-1 text-[11px] font-mono font-bold uppercase text-[#B8F23A]">
+                    <span className="rounded-full border border-lime-300 bg-lime-100 px-3 py-1 text-[11px] font-mono font-bold uppercase text-slate-900">
                       {activeGuide.category}
                     </span>
-                    <span className="rounded-full border border-white/10 bg-[#1a1a20] px-3 py-1 text-[11px] font-mono font-bold uppercase text-[#D2D2CC]">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-mono font-bold uppercase text-slate-700">
                       Difficulty: {activeGuide.difficulty}
                     </span>
-                    <span className="rounded-full border border-white/10 bg-[#1a1a20] px-3 py-1 text-[11px] font-mono font-bold uppercase text-[#D2D2CC]">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-mono font-bold uppercase text-slate-700">
                       Gear: {activeGuide.equipment}
                     </span>
                   </div>
 
-                  <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#F5F5F0]">
+                  <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950">
                     {activeGuide.name} Execution Blueprint
                   </h2>
 
-                  <p className="mt-2 max-w-2xl text-sm sm:text-base text-[#A8A8A2] leading-relaxed">
+                  <p className="mt-2 max-w-2xl text-sm sm:text-base text-slate-600 leading-relaxed">
                     {activeGuide.overview}
                   </p>
                 </div>
 
                 <button
                   onClick={() => setActiveTab("vision")}
-                  className="inline-flex items-center gap-2 self-start rounded-full bg-[#B8F23A] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-[#060608] shadow-[0_0_20px_rgba(184,242,58,0.3)] transition hover:bg-[#a6de2e] md:self-center"
+                  className="inline-flex items-center gap-2 self-start rounded-full bg-[#B8F23A] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-xs transition hover:bg-[#a6de2e] md:self-center"
                 >
                   <Camera size={16} />
                   Start Live Workout
@@ -1020,16 +1020,16 @@ export default function CameraAnalysisPage() {
               </div>
 
               {/* TARGET MUSCLES PILLS */}
-              <div className="mt-8 border-t border-white/[0.08] pt-6 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-mono font-bold uppercase text-[#8E8E92] mr-2">
+              <div className="mt-8 border-t border-slate-100 pt-6 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-mono font-bold uppercase text-slate-500 mr-2">
                   Target Muscle Groups:
                 </span>
                 {activeGuide.targetMuscles.map((muscle) => (
                   <span
                     key={muscle}
-                    className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-mono font-bold text-purple-300"
+                    className="flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-mono font-bold text-purple-800"
                   >
-                    <Flame size={12} className="text-purple-400" />
+                    <Flame size={12} className="text-purple-600" />
                     {muscle}
                   </span>
                 ))}
@@ -1039,8 +1039,8 @@ export default function CameraAnalysisPage() {
             {/* 4-STEP BIOMECHANICAL FLOW */}
             <div>
               <div className="mb-6 flex items-center gap-3">
-                <Sparkles size={20} className="text-[#B8F23A]" />
-                <h3 className="text-xl font-bold uppercase tracking-wider text-[#F5F5F0]">
+                <Sparkles size={20} className="text-slate-900" />
+                <h3 className="text-xl font-bold uppercase tracking-wider text-slate-950">
                   Step-by-Step Kinematic Execution
                 </h3>
               </div>
@@ -1049,19 +1049,19 @@ export default function CameraAnalysisPage() {
                 {activeGuide.steps.map((s) => (
                   <div
                     key={s.step}
-                    className="relative flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 transition-all hover:border-[#B8F23A]/40 hover:shadow-lg"
+                    className="relative flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm"
                   >
                     <div>
-                      <span className="text-3xl font-black font-mono text-[#B8F23A]/30">
+                      <span className="text-3xl font-black font-mono text-slate-200">
                         {s.step}
                       </span>
-                      <h4 className="mt-2 text-base font-bold text-[#F5F5F0]">{s.title}</h4>
-                      <p className="mt-2 text-xs sm:text-sm text-[#A8A8A2] leading-relaxed">
+                      <h4 className="mt-2 text-base font-bold text-slate-950">{s.title}</h4>
+                      <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
                         {s.desc}
                       </p>
                     </div>
 
-                    <div className="mt-6 flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-[#B8F23A]">
+                    <div className="mt-6 flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-900">
                       <span>Phase {s.step}</span>
                       <ChevronRight size={12} />
                     </div>
@@ -1073,10 +1073,10 @@ export default function CameraAnalysisPage() {
             {/* TWO-COLUMN FORM RULES & MISTAKES */}
             <div className="grid gap-8 md:grid-cols-2">
               {/* KEY STANDARDS */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-8">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs">
                 <div className="mb-5 flex items-center gap-2.5">
-                  <ShieldCheck size={20} className="text-[#B8F23A]" />
-                  <h4 className="text-base font-bold uppercase tracking-wider text-[#F5F5F0]">
+                  <ShieldCheck size={20} className="text-emerald-600" />
+                  <h4 className="text-base font-bold uppercase tracking-wider text-slate-950">
                     AI Form Validation Standards
                   </h4>
                 </div>
@@ -1085,9 +1085,9 @@ export default function CameraAnalysisPage() {
                   {activeGuide.keyPoints.map((pt, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 rounded-xl border border-white/[0.04] bg-[#141418] p-3.5 text-xs sm:text-sm text-[#D2D2CC]"
+                      className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5 text-xs sm:text-sm text-slate-700"
                     >
-                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[#B8F23A]" />
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
                       <span>{pt}</span>
                     </li>
                   ))}
@@ -1095,10 +1095,10 @@ export default function CameraAnalysisPage() {
               </div>
 
               {/* COMMON FAULTS */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-8">
+              <div className="rounded-2xl border border-red-200/80 bg-red-50/30 p-6 sm:p-8 shadow-xs">
                 <div className="mb-5 flex items-center gap-2.5">
-                  <AlertTriangle size={20} className="text-red-400" />
-                  <h4 className="text-base font-bold uppercase tracking-wider text-[#F5F5F0]">
+                  <AlertTriangle size={20} className="text-red-500" />
+                  <h4 className="text-base font-bold uppercase tracking-wider text-red-950">
                     Common Biomechanical Faults
                   </h4>
                 </div>
@@ -1107,9 +1107,9 @@ export default function CameraAnalysisPage() {
                   {activeGuide.commonMistakes.map((mistake, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 rounded-xl border border-red-500/10 bg-red-950/10 p-3.5 text-xs sm:text-sm text-[#E2C4C4]"
+                      className="flex items-start gap-3 rounded-xl border border-red-100 bg-white p-3.5 text-xs sm:text-sm text-red-900 shadow-xs"
                     >
-                      <span className="mt-0.5 shrink-0 text-xs font-bold font-mono text-red-400">
+                      <span className="mt-0.5 shrink-0 text-xs font-bold font-mono text-red-500">
                         [!]
                       </span>
                       <span>{mistake}</span>

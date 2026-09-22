@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Activity, Play, Square } from "lucide-react";
 
 import useAuth from "../../hooks/useAuth";
+import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
 
 const WASM_BASE =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm";
@@ -232,48 +233,32 @@ export default function TrainPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <nav className="border-b border-white/10 bg-slate-900/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="text-2xl font-bold text-emerald-400"
-          >
-            FitLens AI
-          </button>
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => navigate("/workouts")}
-              className="text-slate-300 transition hover:text-white"
-            >
-              Workouts
-            </button>
-            <button
-              onClick={handleLogout}
-              className="rounded-lg bg-red-500/10 px-4 py-2 text-red-400 transition hover:bg-red-500/20"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
+      <AuthenticatedNavbar />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <h1 className="text-3xl font-bold">Movement Trainer</h1>
-        <p className="mt-2 text-slate-400">
-          Live pose tracking with MediaPipe. Pick an exercise, start the camera
-          and count your reps automatically.
-        </p>
+      <main className="mx-auto max-w-7xl px-6 py-10 sm:py-12">
+        <div className="mb-8">
+          <span className="inline-block rounded-full border border-lime-500/30 bg-lime-400/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-lime-600">
+            Movement Trainer
+          </span>
+          <h1 className="mt-3 text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-900">
+            Live Movement Trainer
+          </h1>
+          <p className="mt-2 text-slate-600 leading-relaxed max-w-2xl text-sm sm:text-base">
+            Live pose tracking with MediaPipe. Pick an exercise, start the camera
+            and count your reps automatically with real-time joint angle feedback.
+          </p>
+        </div>
 
         {error && (
-          <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-300">
+          <div className="mb-6 rounded-xl border border-red-500/30 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
             {error}
           </div>
         )}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-            <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-black">
+        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+            <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
               <video
                 ref={videoRef}
                 playsInline
@@ -285,49 +270,51 @@ export default function TrainPage() {
                 className={`absolute inset-0 h-full w-full ${running ? "" : "hidden"}`}
               />
               {!running && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-500">
-                  <Activity className="h-8 w-8" />
-                  <span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <Activity className="h-8 w-8 text-slate-500" />
+                  <span className="text-sm font-medium">
                     {loadingModel ? "Loading pose model..." : "Camera is off"}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-wrap gap-3">
               {!running ? (
                 <button
                   onClick={startTracking}
                   disabled={loadingModel}
-                  className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-[#B8F23A] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition hover:bg-[#a6de2e] hover:shadow-[0_0_20px_rgba(184,242,58,0.3)] disabled:opacity-50 cursor-pointer"
                 >
-                  <Play className="h-4 w-4" />
-                  {loadingModel ? "Starting..." : "Start tracking"}
+                  <Play className="h-4 w-4 fill-slate-950" />
+                  {loadingModel ? "Starting..." : "Start Tracking"}
                 </button>
               ) : (
                 <button
                   onClick={stopTracking}
-                  className="flex items-center gap-2 rounded-lg bg-red-500/80 px-4 py-2 font-medium text-white transition hover:bg-red-500"
+                  className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-700 cursor-pointer"
                 >
-                  <Square className="h-4 w-4" /> Stop tracking
+                  <Square className="h-4 w-4 fill-white" /> Stop Tracking
                 </button>
               )}
               <button
                 onClick={resetReps}
-                className="rounded-lg border border-white/15 px-4 py-2 text-slate-300 transition hover:bg-white/5"
+                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
               >
-                Reset counter
+                Reset Counter
               </button>
             </div>
           </section>
 
           <section className="space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-              <label className="block text-sm text-slate-400">Exercise</label>
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Exercise Target
+              </label>
               <select
                 value={exerciseName}
                 onChange={(event) => setExerciseName(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-white/15 bg-slate-800 px-3 py-2"
+                className="mt-2.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-slate-400 focus:outline-none"
               >
                 {Object.keys(EXERCISES).map((name) => (
                   <option key={name} value={name}>
@@ -335,24 +322,24 @@ export default function TrainPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">
                 {EXERCISES[exerciseName].cue}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent p-6 text-center">
-              <p className="text-sm uppercase tracking-wide text-slate-400">
-                Reps
+            <div className="rounded-2xl border border-lime-500/30 bg-lime-50/40 p-6 text-center shadow-xs">
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                Total Reps
               </p>
-              <p className="text-6xl font-bold text-emerald-400">{hud.reps}</p>
-              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <div className="rounded-lg bg-slate-800/60 px-3 py-2">
-                  <span className="block text-slate-500">Stage</span>
-                  <span className="font-semibold capitalize">{hud.stage}</span>
+              <p className="mt-2 text-6xl font-black tracking-tight text-slate-900">{hud.reps}</p>
+              <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl border border-slate-200/60 bg-white p-3 shadow-2xs">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Stage</span>
+                  <span className="mt-1 block font-bold capitalize text-slate-900">{hud.stage}</span>
                 </div>
-                <div className="rounded-lg bg-slate-800/60 px-3 py-2">
-                  <span className="block text-slate-500">Joint angle</span>
-                  <span className="font-semibold">
+                <div className="rounded-xl border border-slate-200/60 bg-white p-3 shadow-2xs">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Joint Angle</span>
+                  <span className="mt-1 block font-bold text-slate-900">
                     {hud.angle !== null ? `${hud.angle}°` : "--"}
                   </span>
                 </div>

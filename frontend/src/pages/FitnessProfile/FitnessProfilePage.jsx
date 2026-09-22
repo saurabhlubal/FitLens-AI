@@ -122,9 +122,9 @@ export default function FitnessProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
+      <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
         <AuthenticatedNavbar />
-        <div className="flex min-h-[60vh] items-center justify-center text-xs font-bold uppercase tracking-widest text-[#8E8E92]">
+        <div className="flex min-h-[60vh] items-center justify-center text-xs font-bold uppercase tracking-widest text-slate-400">
           Loading fitness profile...
         </div>
       </div>
@@ -132,40 +132,40 @@ export default function FitnessProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-[#F5F5F0]">
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
       {/* AUTHENTICATED NAVBAR */}
       <AuthenticatedNavbar />
 
-      <div className="mx-auto max-w-2xl px-6 py-10 sm:py-12">
+      <div className="mx-auto max-w-2xl px-6 py-8 sm:py-10">
         <button
           onClick={() => navigate("/profile")}
-          className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0c0c0e] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#D2D2CC] transition hover:border-[#B8F23A]/40 hover:text-white"
+          className="mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950"
         >
           <ArrowLeft size={14} />
           Back to Profile
         </button>
 
         <div className="mb-8">
-          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-[#B8F23A]">
-            Metrics
+          <span className="inline-block rounded-full border border-lime-300/80 bg-lime-100/60 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-900">
+            Biometric Metrics
           </span>
 
-          <h1 className="mt-3 text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#F5F5F0]">
+          <h1 className="mt-3 text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950">
             Fitness Profile
           </h1>
 
-          <p className="mt-2 text-sm sm:text-base text-[#A8A8A2] leading-relaxed">
-            Enter your information to personalize your FitLens AI experience.
+          <p className="mt-1 text-sm sm:text-base text-slate-600 leading-relaxed">
+            Enter your physical details to calibrate AI form detection and workout load calculations.
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-7 sm:p-9"
+          className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-7 sm:p-9 shadow-xs"
         >
           {/* Age */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
               Age
             </label>
 
@@ -178,13 +178,13 @@ export default function FitnessProfilePage() {
               min="1"
               max="120"
               placeholder="Enter your age"
-              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] placeholder-[#55555A] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:bg-white"
             />
           </div>
 
           {/* Height */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
               Height (cm)
             </label>
 
@@ -197,13 +197,13 @@ export default function FitnessProfilePage() {
               min="50"
               max="250"
               placeholder="Enter your height"
-              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] placeholder-[#55555A] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:bg-white"
             />
           </div>
 
           {/* Weight */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
               Weight (kg)
             </label>
 
@@ -217,13 +217,13 @@ export default function FitnessProfilePage() {
               max="300"
               step="0.1"
               placeholder="Enter your weight"
-              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] placeholder-[#55555A] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:bg-white"
             />
           </div>
 
           {/* Fitness Goal */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
               Fitness Goal
             </label>
 
@@ -232,7 +232,7 @@ export default function FitnessProfilePage() {
               value={form.fitnessGoal}
               onChange={handleChange}
               required
-              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white"
             >
               <option value="">Select your goal</option>
               <option value="Weight Loss">Weight Loss</option>
@@ -245,7 +245,7 @@ export default function FitnessProfilePage() {
 
           {/* Activity Level */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#8E8E92]">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
               Activity Level
             </label>
 
@@ -254,7 +254,7 @@ export default function FitnessProfilePage() {
               value={form.activityLevel}
               onChange={handleChange}
               required
-              className="w-full rounded-xl border border-white/[0.08] bg-[#141418] px-4 py-3 text-sm text-[#F5F5F0] outline-none transition focus:border-[#B8F23A]/50 focus:ring-1 focus:ring-[#B8F23A]/30"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white"
             >
               <option value="">Select activity level</option>
               <option value="Sedentary">Sedentary</option>
@@ -267,14 +267,14 @@ export default function FitnessProfilePage() {
 
           {/* Success */}
           {message && (
-            <div className="rounded-xl border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-3 text-xs font-bold uppercase tracking-wider text-[#B8F23A]">
+            <div className="rounded-xl border border-lime-300 bg-lime-50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-900 shadow-xs">
               {message}
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-400">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-600">
               {error}
             </div>
           )}
@@ -282,7 +282,7 @@ export default function FitnessProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-full bg-[#B8F23A] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-full bg-[#B8F23A] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition-all duration-300 hover:bg-[#a6de2e] shadow-xs disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Fitness Profile"}
           </button>

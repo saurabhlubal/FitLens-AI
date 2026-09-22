@@ -37,15 +37,15 @@ export default function Testimonials() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-16"
         >
-          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#B8F23A]">
+          <span className="inline-block rounded-full border border-lime-500/30 bg-lime-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-lime-600">
             Trusted by Fitness Professionals
           </span>
 
-          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#F5F5F0]">
+          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-slate-900">
             Loved by Athletes & Trainers
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-[#A8A8A2]">
+          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-slate-600">
             Join fitness enthusiasts using AI-powered movement analysis to
             improve technique, prevent injuries, and train smarter.
           </p>
@@ -64,7 +64,7 @@ export default function Testimonials() {
                 delay: index * 0.1,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="group rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-8 transition-all duration-300 hover:border-white/20 hover:bg-[#111115]"
+              className="group rounded-2xl border border-slate-200/80 bg-white p-8 shadow-xs transition-all duration-300 hover:border-slate-300 hover:shadow-sm"
             >
               {/* Stars */}
               <div className="mb-6 flex gap-1">
@@ -72,30 +72,30 @@ export default function Testimonials() {
                   <Star
                     key={i}
                     size={15}
-                    className="fill-[#B8F23A] text-[#B8F23A]"
+                    className="fill-lime-500 text-lime-500"
                   />
                 ))}
               </div>
 
               {/* Review */}
-              <p className="text-[#D2D2CC] leading-relaxed text-sm sm:text-base italic">
+              <p className="text-slate-700 leading-relaxed text-sm sm:text-base italic">
                 "{item.review}"
               </p>
 
               {/* User */}
-              <div className="mt-8 flex items-center gap-4 border-t border-white/[0.06] pt-6">
+              <div className="mt-8 flex items-center gap-4 border-t border-slate-100 pt-6">
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="h-12 w-12 rounded-full border border-white/20 object-cover"
+                  className="h-12 w-12 rounded-full border border-slate-200 object-cover"
                 />
 
                 <div>
-                  <h4 className="font-bold text-[#F5F5F0] text-sm">
+                  <h4 className="font-bold text-slate-900 text-sm">
                     {item.name}
                   </h4>
 
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#B8F23A]">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-lime-700">
                     {item.role}
                   </p>
                 </div>
