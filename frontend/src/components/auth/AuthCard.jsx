@@ -4,13 +4,13 @@ export default function AuthCard({
   children,
 }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 backdrop-blur-xl shadow-2xl">
+    <div className="rounded-3xl border border-slate-200/80 bg-white p-8 sm:p-10 shadow-xs">
 
-      <h1 className="text-3xl font-bold text-white">
+      <h1 className="text-3xl font-black uppercase tracking-tight text-slate-950">
         {title}
       </h1>
 
-      <p className="mt-2 text-slate-400">
+      <p className="mt-2 text-sm text-slate-600">
         {subtitle}
       </p>
 

@@ -12,7 +12,7 @@ export default function PasswordInput({
   return (
     <div className="mb-5">
 
-      <label className="mb-2 block text-sm font-medium text-slate-300">
+      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
         {label}
       </label>
 
@@ -23,15 +23,15 @@ export default function PasswordInput({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 pr-12 text-white outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:bg-white"
         />
 
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
         >
-          {show ? <EyeOff size={20} /> : <Eye size={20} />}
+          {show ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
 
       </div>

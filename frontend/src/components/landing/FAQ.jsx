@@ -48,15 +48,15 @@ export default function FAQ() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-16"
         >
-          <span className="inline-block rounded-full border border-[#B8F23A]/30 bg-[#B8F23A]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#B8F23A]">
+          <span className="inline-block rounded-full border border-lime-500/30 bg-lime-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-lime-600">
             Frequently Asked Questions
           </span>
 
-          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#F5F5F0]">
+          <h2 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-slate-900">
             Got Questions?
           </h2>
 
-          <p className="mt-5 text-[#A8A8A2] text-base sm:text-lg leading-relaxed">
+          <p className="mt-5 text-slate-600 text-base sm:text-lg leading-relaxed">
             Everything you need to know about FitLens AI.
           </p>
         </motion.div>
@@ -68,10 +68,10 @@ export default function FAQ() {
             return (
               <div
                 key={index}
-                className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                className={`rounded-2xl border transition-all duration-300 overflow-hidden shadow-xs ${
                   isOpen
-                    ? "border-[#B8F23A]/35 bg-[#0e110a]"
-                    : "border-white/[0.08] bg-[#0c0c0e] hover:border-white/15"
+                    ? "border-lime-500/40 bg-lime-50/30"
+                    : "border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-sm"
                 }`}
               >
                 <button
@@ -80,14 +80,14 @@ export default function FAQ() {
                   }
                   className="w-full flex items-center justify-between p-6 sm:p-7 text-left gap-4"
                 >
-                  <span className="text-base sm:text-lg font-bold text-[#F5F5F0]">
+                  <span className="text-base sm:text-lg font-bold text-slate-900">
                     {faq.question}
                   </span>
 
                   <ChevronDown
                     size={20}
-                    className={`shrink-0 text-[#B8F23A] transition-transform duration-300 ${
-                      isOpen ? "rotate-180" : ""
+                    className={`shrink-0 text-slate-700 transition-transform duration-300 ${
+                      isOpen ? "rotate-180 text-lime-600" : ""
                     }`}
                   />
                 </button>
@@ -101,8 +101,8 @@ export default function FAQ() {
                       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="pb-7 px-6 sm:px-7 pt-1 border-t border-white/[0.04]">
-                        <p className="text-[#A8A8A2] text-sm sm:text-base leading-relaxed">
+                      <div className="pb-7 px-6 sm:px-7 pt-1 border-t border-slate-100">
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           {faq.answer}
                         </p>
                       </div>

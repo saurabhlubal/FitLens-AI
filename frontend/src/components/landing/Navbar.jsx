@@ -108,8 +108,8 @@ export default function Navbar() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className={`fixed left-0 top-0 z-50 w-full transition-all duration-300 ${
           scrolled
-            ? "border-b border-white/[0.08] bg-[#060608]/85 backdrop-blur-xl shadow-2xl"
-            : "bg-transparent border-b border-transparent"
+            ? "border-b border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-xs text-slate-900"
+            : "bg-transparent border-b border-transparent text-[#F5F5F0]"
         }`}
       >
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
@@ -124,15 +124,19 @@ export default function Navbar() {
               whileTap={{ scale: 0.98 }}
               className="flex items-center gap-3"
             >
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-[#121216] transition-colors group-hover:border-[#B8F23A]/40">
-                <Activity className="text-[#B8F23A]" size={18} />
+              <div className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition-colors ${
+                scrolled
+                  ? "border-slate-200 bg-slate-950 text-[#B8F23A]"
+                  : "border-white/10 bg-[#121216] text-[#B8F23A]"
+              }`}>
+                <Activity size={18} />
               </div>
 
               <div className="flex items-center gap-1.5">
-                <span className="text-lg font-black tracking-tight text-[#F5F5F0]">
+                <span className={`text-lg font-black tracking-tight ${scrolled ? "text-slate-950" : "text-[#F5F5F0]"}`}>
                   FitLens
                 </span>
-                <span className="rounded bg-[#B8F23A]/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#B8F23A] border border-[#B8F23A]/30">
+                <span className="rounded bg-[#B8F23A] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-950">
                   AI
                 </span>
               </div>
@@ -140,7 +144,11 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-1 rounded-full border border-white/[0.08] bg-[#0c0c0e]/60 px-3 py-1.5 backdrop-blur-md lg:flex transition-all">
+          <nav className={`hidden items-center gap-1 rounded-full px-3 py-1.5 backdrop-blur-md lg:flex transition-all ${
+            scrolled
+              ? "border border-slate-200 bg-slate-100/70"
+              : "border border-white/[0.08] bg-[#0c0c0e]/60"
+          }`}>
             {navItems.map((item) => {
               const isActive = active === item.id;
               return (
@@ -149,13 +157,17 @@ export default function Navbar() {
                   onClick={() => scrollToSection(item.id)}
                   className={`relative px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 rounded-full ${
                     isActive
-                      ? "text-[#B8F23A] bg-[#B8F23A]/10"
-                      : "text-[#8E8E92] hover:text-[#F5F5F0] hover:bg-white/[0.04]"
+                      ? scrolled
+                        ? "text-slate-950 bg-[#B8F23A]"
+                        : "text-[#B8F23A] bg-[#B8F23A]/10"
+                      : scrolled
+                        ? "text-slate-600 hover:text-slate-950 hover:bg-white"
+                        : "text-[#8E8E92] hover:text-[#F5F5F0] hover:bg-white/[0.04]"
                   }`}
                 >
                   {item.name}
 
-                  {isActive && (
+                  {isActive && !scrolled && (
                     <motion.span
                       layoutId="activeNavIndicator"
                       className="absolute inset-0 rounded-full border border-[#B8F23A]/35 shadow-[0_0_15px_rgba(184,242,58,0.2)]"
@@ -170,13 +182,17 @@ export default function Navbar() {
           {/* Right Side Actions */}
           <div className="hidden items-center gap-4 lg:flex">
             <Link to="/login">
-              <button className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#8E8E92] transition-colors hover:text-[#F5F5F0]">
+              <button className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                scrolled
+                  ? "text-slate-600 hover:text-slate-950"
+                  : "text-[#8E8E92] hover:text-[#F5F5F0]"
+              }`}>
                 Login
               </button>
             </Link>
 
             <Link to="/register">
-              <Button className="rounded-full bg-[#B8F23A] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[#060608] transition-all duration-300 hover:bg-[#a6de2e] hover:shadow-[0_0_25px_rgba(184,242,58,0.35)]">
+              <Button className="rounded-full bg-[#B8F23A] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition-all duration-300 hover:bg-[#a6de2e] shadow-xs">
                 Get Started
               </Button>
             </Link>
@@ -185,7 +201,11 @@ export default function Navbar() {
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#0c0c0e] text-[#F5F5F0] transition hover:border-white/20 lg:hidden"
+            className={`flex h-10 w-10 items-center justify-center rounded-xl border transition lg:hidden ${
+              scrolled
+                ? "border-slate-200 bg-white text-slate-950 shadow-xs"
+                : "border-white/10 bg-[#0c0c0e] text-[#F5F5F0]"
+            }`}
             aria-label="Toggle navigation menu"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -201,7 +221,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.25 }}
-            className="fixed top-20 left-0 z-40 w-full border-b border-white/[0.08] bg-[#060608]/95 p-6 backdrop-blur-2xl shadow-2xl lg:hidden"
+            className="fixed top-20 left-0 z-40 w-full border-b border-slate-200 bg-white/95 p-6 backdrop-blur-2xl shadow-xl text-slate-900 lg:hidden"
           >
             <div className="flex flex-col gap-2.5">
               {navItems.map((item) => (
@@ -210,20 +230,20 @@ export default function Navbar() {
                   onClick={() => scrollToSection(item.id)}
                   className={`rounded-xl px-4 py-3 text-left text-xs font-bold uppercase tracking-wider transition ${
                     active === item.id
-                      ? "bg-[#B8F23A]/10 text-[#B8F23A] border border-[#B8F23A]/30"
-                      : "text-[#8E8E92] hover:bg-white/[0.04] hover:text-[#F5F5F0]"
+                      ? "bg-[#B8F23A] text-slate-950 font-bold"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                   }`}
                 >
                   {item.name}
                 </button>
               ))}
 
-              <div className="mt-4 pt-4 border-t border-white/[0.08] flex flex-col gap-3">
+              <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3">
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <button className="w-full rounded-xl border border-white/10 py-3 text-center text-xs font-bold uppercase tracking-wider text-[#8E8E92] hover:bg-white/[0.04] hover:text-[#F5F5F0] transition">
+                  <button className="w-full rounded-xl border border-slate-200 bg-white py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition shadow-xs">
                     Login
                   </button>
                 </Link>
@@ -232,7 +252,7 @@ export default function Navbar() {
                   to="/register"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <Button className="w-full rounded-full bg-[#B8F23A] py-3 text-xs font-bold uppercase tracking-wider text-[#060608] hover:bg-[#a6de2e] shadow-[0_0_20px_rgba(184,242,58,0.25)]">
+                  <Button className="w-full rounded-full bg-[#B8F23A] py-3 text-xs font-bold uppercase tracking-wider text-slate-950 hover:bg-[#a6de2e] shadow-xs">
                     Get Started
                   </Button>
                 </Link>

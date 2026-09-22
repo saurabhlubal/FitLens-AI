@@ -8,7 +8,7 @@ export default function AuthInput({
   return (
     <div className="mb-5">
 
-      <label className="mb-2 block text-sm font-medium text-slate-300">
+      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
         {label}
       </label>
 
@@ -17,7 +17,7 @@ export default function AuthInput({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:bg-white"
       />
 
     </div>

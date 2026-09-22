@@ -123,7 +123,7 @@ export default function RegisterPage() {
           />
 
           {error && (
-            <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-600">
               {error}
             </p>
           )}
@@ -131,7 +131,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full rounded-xl bg-emerald-500 py-3 font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 w-full rounded-full bg-[#B8F23A] py-3.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition-all duration-300 hover:bg-[#a6de2e] shadow-xs disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Creating Account..." : "Create Account"}
           </button>
@@ -142,11 +142,11 @@ export default function RegisterPage() {
 
         <SocialButton text="Continue with Google" />
 
-        <p className="mt-6 text-center text-sm text-slate-400">
+        <p className="mt-6 text-center text-xs text-slate-500">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-semibold text-emerald-400 hover:underline"
+            className="font-bold uppercase tracking-wider text-slate-900 underline underline-offset-4 hover:text-lime-700"
           >
             Login
           </Link>
