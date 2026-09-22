@@ -14,8 +14,9 @@ import WorkoutsPage from "../pages/Workouts/WorkoutsPage";
 import WorkoutDetailPage from "../pages/Workouts/WorkoutDetailPage";
 
 import CameraAnalysisPage from "../pages/Camera/CameraAnalysisPage";
-
 import TrainingPage from "../pages/Training/TraininPage";
+import ScanPage from "../pages/Scan/ScanPage";
+import TrainPage from "../pages/Train/TrainPage";
 
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 
@@ -136,6 +137,32 @@ export default function AppRoutes() {
         }
       />
 
+
+      {/* =========================
+          OCR Scan
+      ========================= */}
+
+      <Route
+        path="/scan"
+        element={
+          <ProtectedRoute>
+            <ScanPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =========================
+          Pose Trainer
+      ========================= */}
+
+      <Route
+        path="/train"
+        element={
+          <ProtectedRoute>
+            <TrainPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* =========================
           404
