@@ -17,6 +17,7 @@ export default function AuthenticatedNavbar() {
   const navLinks = [
     { label: "Dashboard", path: "/dashboard" },
     { label: "Workouts", path: "/workouts" },
+    { label: "Scan", path: "/scan" },
     { label: "Progress", path: "/progress" },
     { label: "Profile", path: "/profile" },
     { label: "AI Camera", path: "/camera", icon: Camera },

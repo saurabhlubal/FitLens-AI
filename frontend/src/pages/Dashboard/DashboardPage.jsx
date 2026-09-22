@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Calendar,
   Zap,
+  FileScan,
 } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
@@ -169,6 +170,14 @@ export default function DashboardPage() {
                   </button>
 
                   <button
+                    onClick={() => navigate("/scan")}
+                    className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-8 py-4 text-xs font-bold uppercase tracking-wider text-[#F5F5F0] transition hover:border-[#B8F23A]/40 hover:bg-white/[0.08]"
+                  >
+                    <FileScan size={14} className="text-[#B8F23A]" />
+                    <span>Scan Workout Plan</span>
+                  </button>
+
+                  <button
                     onClick={() => navigate("/camera")}
                     className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-8 py-4 text-xs font-bold uppercase tracking-wider text-[#F5F5F0] transition hover:border-[#B8F23A]/40 hover:bg-white/[0.08]"
                   >
@@ -193,7 +202,7 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {/* WORKOUTS BENTO TILE */}
               <button
                 onClick={() => navigate("/workouts")}
@@ -254,6 +263,36 @@ export default function DashboardPage() {
                 </div>
               </button>
 
+              {/* SCAN BENTO TILE */}
+              <button
+                onClick={() => navigate("/scan")}
+                className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0c0c0e] p-7 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#B8F23A]/40 hover:bg-[#111115]"
+              >
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-[#16161a] text-[#B8F23A] transition-colors group-hover:border-[#B8F23A]/40 group-hover:bg-[#1a1a1f]">
+                    <FileScan size={22} />
+                  </div>
+                  <span className="rounded-lg border border-white/[0.06] bg-[#141418] px-2.5 py-1 text-[10px] font-mono uppercase text-[#8E8E92]">
+                    MODULE 03
+                  </span>
+                </div>
+
+                <h4 className="text-xl font-bold text-[#F5F5F0]">
+                  Scan Plan
+                </h4>
+
+                <p className="mt-2 text-sm text-[#A8A8A2] leading-relaxed">
+                  Extract routines and exercises automatically from workout images.
+                </p>
+
+                <div className="mt-8 flex items-center justify-between border-t border-white/[0.06] pt-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#B8F23A] transition-transform group-hover:translate-x-1">
+                    Scan routine →
+                  </span>
+                  <div className="h-2 w-2 rounded-full bg-[#B8F23A]/30 group-hover:bg-[#B8F23A] transition-colors" />
+                </div>
+              </button>
+
               {/* PROFILE BENTO TILE */}
               <button
                 onClick={() => navigate("/profile")}
@@ -264,7 +303,7 @@ export default function DashboardPage() {
                     <User size={22} />
                   </div>
                   <span className="rounded-lg border border-white/[0.06] bg-[#141418] px-2.5 py-1 text-[10px] font-mono uppercase text-[#8E8E92]">
-                    MODULE 03
+                    MODULE 04
                   </span>
                 </div>
 
