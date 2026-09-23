@@ -2,6 +2,10 @@
 node_modules/
 dist/
 
+# Large binaries (loaded dynamically via CDN)
+frontend/public/mediapipe/wasm/
+frontend/public/models/
+
 # Python
 __pycache__/
 *.py[cod]
