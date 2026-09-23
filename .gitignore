@@ -1,0 +1,33 @@
+# Node
+node_modules/
+dist/
+
+# Large binaries (loaded dynamically via CDN)
+frontend/public/mediapipe/wasm/
+frontend/public/models/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.venv/
+env/
+venv/
+.pytest_cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Java / Maven
+backend/target/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
