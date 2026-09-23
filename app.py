@@ -86,8 +86,16 @@ EXERCISES_METADATA = {
     }
 }
 
+try:
+    import spaces
+    gpu_decorator = spaces.GPU
+except Exception:
+    def gpu_decorator(fn):
+        return fn
+
 EXERCISE_NAMES = list(EXERCISES_METADATA.keys())
 
+@gpu_decorator
 def analyze_pose_data(exercise_type):
     """
     Inspect exercise kinematics and state machine rules.
