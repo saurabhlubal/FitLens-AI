@@ -24,16 +24,16 @@ class BicepCurlDetector(BaseExerciseDetector):
     ) -> MovementAnalysisResponse:
         session_data = session_data or {}
         
-        # 1. Extract Arm and Torso Keypoints
-        l_shoulder = self.get_landmark(landmarks, 11)
-        l_elbow = self.get_landmark(landmarks, 13)
-        l_wrist = self.get_landmark(landmarks, 15)
-        l_hip = self.get_landmark(landmarks, 23)
+        # 1. Extract Arm and Torso Keypoints with confidence filtering
+        l_shoulder = self.get_landmark(landmarks, 11, min_visibility=0.45)
+        l_elbow = self.get_landmark(landmarks, 13, min_visibility=0.45)
+        l_wrist = self.get_landmark(landmarks, 15, min_visibility=0.40)
+        l_hip = self.get_landmark(landmarks, 23, min_visibility=0.35)
 
-        r_shoulder = self.get_landmark(landmarks, 12)
-        r_elbow = self.get_landmark(landmarks, 14)
-        r_wrist = self.get_landmark(landmarks, 16)
-        r_hip = self.get_landmark(landmarks, 24)
+        r_shoulder = self.get_landmark(landmarks, 12, min_visibility=0.45)
+        r_elbow = self.get_landmark(landmarks, 14, min_visibility=0.45)
+        r_wrist = self.get_landmark(landmarks, 16, min_visibility=0.40)
+        r_hip = self.get_landmark(landmarks, 24, min_visibility=0.35)
 
         # Calculate Elbow Flexion Angles (Shoulder -> Elbow -> Wrist)
         left_elbow_angle = self.calculate_angle(l_shoulder, l_elbow, l_wrist)
@@ -55,7 +55,7 @@ class BicepCurlDetector(BaseExerciseDetector):
                 repIncremented=False,
                 formScore=0.0,
                 isCorrectForm=False,
-                feedback="Step into the camera frame so your shoulders, elbows, and hands are visible.",
+                feedback="Arms or shoulders not clearly visible. Step into camera view.",
             )
 
         # Select primary active arm

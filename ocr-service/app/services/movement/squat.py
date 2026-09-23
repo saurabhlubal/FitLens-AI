@@ -24,16 +24,16 @@ class SquatDetector(BaseExerciseDetector):
     ) -> MovementAnalysisResponse:
         session_data = session_data or {}
 
-        # 1. Extract Leg & Torso Keypoints
-        l_hip = self.get_landmark(landmarks, 23)
-        l_knee = self.get_landmark(landmarks, 25)
-        l_ankle = self.get_landmark(landmarks, 27)
-        l_shoulder = self.get_landmark(landmarks, 11)
+        # 1. Extract Leg & Torso Keypoints with confidence filtering
+        l_hip = self.get_landmark(landmarks, 23, min_visibility=0.40)
+        l_knee = self.get_landmark(landmarks, 25, min_visibility=0.40)
+        l_ankle = self.get_landmark(landmarks, 27, min_visibility=0.35)
+        l_shoulder = self.get_landmark(landmarks, 11, min_visibility=0.40)
 
-        r_hip = self.get_landmark(landmarks, 24)
-        r_knee = self.get_landmark(landmarks, 26)
-        r_ankle = self.get_landmark(landmarks, 28)
-        r_shoulder = self.get_landmark(landmarks, 12)
+        r_hip = self.get_landmark(landmarks, 24, min_visibility=0.40)
+        r_knee = self.get_landmark(landmarks, 26, min_visibility=0.40)
+        r_ankle = self.get_landmark(landmarks, 28, min_visibility=0.35)
+        r_shoulder = self.get_landmark(landmarks, 12, min_visibility=0.40)
 
         left_knee_angle = self.calculate_angle(l_hip, l_knee, l_ankle)
         right_knee_angle = self.calculate_angle(r_hip, r_knee, r_ankle)
@@ -57,7 +57,7 @@ class SquatDetector(BaseExerciseDetector):
                 repIncremented=False,
                 formScore=0.0,
                 isCorrectForm=False,
-                feedback="Legs not clearly detected. Ensure your full body is visible.",
+                feedback="Legs/knees not clearly detected. Step back so your hips, knees, and ankles are in frame.",
             )
 
         # 2. Structural Frame & Form Validation

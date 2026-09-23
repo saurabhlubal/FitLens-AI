@@ -1,0 +1,16 @@
+node_modules
+.venv
+__pycache__
+*.pyc
+.git
+.github
+.pytest_cache
+.DS_Store
+backend/
+database/
+docs/
+assets/
+*.docx
+*.log
+doc_dump.txt
+paper_figures/

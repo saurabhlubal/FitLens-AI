@@ -116,3 +116,35 @@ def test_shoulder_press_rep_cycle():
     res_press = detector.analyze(landmarks, current_reps=0, current_stage="down")
     assert res_press.stage == "up"
     assert res_press.repetitionCount == 1
+
+def test_plank_timer_and_shoulder_view():
+    from app.services.movement.plank import PlankDetector
+    detector = PlankDetector()
+    landmarks = [make_landmark(0.5, 0.5) for _ in range(33)]
+    
+    # 1. Shoulder view setup: Shoulders level (y=0.4), Elbows grounded (y=0.6)
+    landmarks[11] = make_landmark(0.4, 0.4, visibility=0.9)
+    landmarks[12] = make_landmark(0.6, 0.4, visibility=0.9)
+    landmarks[13] = make_landmark(0.4, 0.6, visibility=0.85)
+    landmarks[14] = make_landmark(0.6, 0.6, visibility=0.85)
+    
+    # Lower body hidden / low visibility
+    landmarks[23] = make_landmark(0.4, 0.5, visibility=0.1)
+    landmarks[24] = make_landmark(0.6, 0.5, visibility=0.1)
+    landmarks[27] = make_landmark(0.4, 0.9, visibility=0.1)
+    landmarks[28] = make_landmark(0.6, 0.9, visibility=0.1)
+    
+    res = detector.analyze(landmarks, current_reps=0, current_stage="holding", session_data={"hold_accumulator": 5.0})
+    assert res.success
+    assert res.isCorrectForm
+    assert res.stage == "holding"
+    assert res.metrics["isTimerExercise"] is True
+    assert res.metrics["holdDurationSec"] >= 5
+
+def test_confidence_filtering_rejects_occluded_joints():
+    detector = BicepCurlDetector()
+    landmarks = [make_landmark(0.5, 0.5, visibility=0.1) for _ in range(33)]
+    res = detector.analyze(landmarks, current_reps=0, current_stage="up")
+    assert not res.success
+    assert "visible" in res.feedback.lower()
+

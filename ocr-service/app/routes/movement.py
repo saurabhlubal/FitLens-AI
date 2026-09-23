@@ -7,6 +7,7 @@ from app.services.movement.body_part_classifier import BodyPartSegmenter
 router = APIRouter(prefix="/api/ai/movement", tags=["Movement & Repetition Detection"])
 
 @router.post("/detect-landmarks", response_model=MovementAnalysisResponse)
+@router.post("/analyze", response_model=MovementAnalysisResponse)
 async def analyze_movement_landmarks(payload: MovementAnalysisRequest):
     """
     Analyzes live pose landmarks (33-point coordinates), evaluates kinematics & joint angles,

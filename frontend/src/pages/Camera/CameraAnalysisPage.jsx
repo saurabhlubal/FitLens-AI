@@ -11,12 +11,14 @@ import {
   RefreshCw,
   BookOpen,
   Sparkles,
-  Info,
   ShieldCheck,
-  Zap,
   Target,
   ChevronRight,
   Flame,
+  Timer,
+  Sun,
+  Eye,
+  Check,
 } from "lucide-react";
 import { createPoseLandmarker } from "../../utils/pose/poseLandmarker";
 import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
@@ -81,6 +83,9 @@ export default function CameraAnalysisPage() {
   // Session ID to discard in-flight async responses after a reset
   const sessionIdRef = useRef(0);
 
+  // Get-ready calibration countdown state ref
+  const getReadyTimerRef = useRef(0);
+
   const [cameraOn, setCameraOn] = useState(false);
   const [exercise, setExercise] = useState("Bicep Curl");
   const [detecting, setDetecting] = useState(false);
@@ -96,12 +101,19 @@ export default function CameraAnalysisPage() {
   const [jointAngles, setJointAngles] = useState({});
   const [romPercentage, setRomPercentage] = useState(0);
 
+  // Robustness Indicators
+  const [isLowLight, setIsLowLight] = useState(false);
+  const [visibilityWarning, setVisibilityWarning] = useState(null);
+  const [getReadyCountdown, setGetReadyCountdown] = useState(null); // null | 3 | 2 | 1 | "GO!"
+  const [plankMode, setPlankMode] = useState("full_body"); // "full_body" | "upper_body" | "shoulder_only"
+
   // Workout Session Context (if navigated from workouts)
   const [workoutContext, setWorkoutContext] = useState(null);
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const activeGuide = EXERCISE_GUIDES[exercise] || EXERCISE_GUIDES["Bicep Curl"];
+  const isTimerExercise = exercise === "Plank";
 
   useEffect(() => {
     currentRepsRef.current = reps;
@@ -144,6 +156,33 @@ export default function CameraAnalysisPage() {
 
     fetchWorkoutContext();
   }, [exerciseId, token]);
+
+  // =========================
+  // LIGHTING / IMAGE QUALITY CHECK
+  // =========================
+  const checkLightingQuality = (video) => {
+    if (!video || video.videoWidth === 0) return;
+    try {
+      const sampleCanvas = document.createElement("canvas");
+      sampleCanvas.width = 32;
+      sampleCanvas.height = 24;
+      const sCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+      sCtx.drawImage(video, 0, 0, 32, 24);
+      const imgData = sCtx.getImageData(0, 0, 32, 24).data;
+      let totalLuminance = 0;
+      const pixelCount = imgData.length / 4;
+      for (let i = 0; i < imgData.length; i += 4) {
+        const r = imgData[i];
+        const g = imgData[i + 1];
+        const b = imgData[i + 2];
+        totalLuminance += 0.299 * r + 0.587 * g + 0.114 * b;
+      }
+      const avgLuminance = totalLuminance / pixelCount;
+      setIsLowLight(avgLuminance < 35);
+    } catch {
+      // Ignore canvas security errors
+    }
+  };
 
   // =========================
   // START CAMERA
@@ -205,6 +244,7 @@ export default function CameraAnalysisPage() {
     setCameraOn(false);
     setDetecting(false);
     setLandmarksDetected(false);
+    setGetReadyCountdown(null);
     setFeedback("Camera stopped.");
   };
 
@@ -218,6 +258,7 @@ export default function CameraAnalysisPage() {
     currentStageRef.current = "up";
     formStatusHistoryRef.current = [];
     smoothedLandmarksRef.current = null;
+    getReadyTimerRef.current = 0;
 
     setReps(0);
     setStage("up");
@@ -225,11 +266,13 @@ export default function CameraAnalysisPage() {
     setFormStatus("Good Form");
     setRomPercentage(0);
     setSaveSuccess(false);
-    setFeedback("Session reset! Step into frame and perform your rep.");
+    setVisibilityWarning(null);
+    setGetReadyCountdown(null);
+    setFeedback("Session reset! Step into frame to begin.");
   };
 
   // ==========================================
-  // LANDMARK SMOOTHING (Anti-Jitter Filter)
+  // LANDMARK SMOOTHING (Adaptive Anti-Jitter EMA)
   // ==========================================
   const applySmoothingFilter = (rawLandmarks) => {
     if (!rawLandmarks || rawLandmarks.length === 0) return rawLandmarks;
@@ -305,6 +348,20 @@ export default function CameraAnalysisPage() {
       ctx.fillStyle = inFrame ? "rgba(184, 242, 58, 0.7)" : "rgba(255, 255, 255, 0.4)";
       ctx.textAlign = "center";
       ctx.fillText("PIN ELBOWS TO RIBS", width * 0.5, height * 0.95);
+    } else if (currentExercise === "Plank") {
+      // Horizontal Plank Alignment Guide Line
+      ctx.strokeStyle = "rgba(184, 242, 58, 0.25)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(width * 0.15, height * 0.55);
+      ctx.lineTo(width * 0.85, height * 0.55);
+      ctx.stroke();
+
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = "rgba(184, 242, 58, 0.7)";
+      ctx.textAlign = "center";
+      ctx.fillText("KEEP SHOULDERS & SPINE LEVEL", width * 0.5, height * 0.95);
     }
     ctx.restore();
   };
@@ -338,8 +395,8 @@ export default function CameraAnalysisPage() {
       const pointB = landmarks[end];
 
       if (!pointA || !pointB) return;
-      if (pointA.visibility !== undefined && pointA.visibility < 0.35) return;
-      if (pointB.visibility !== undefined && pointB.visibility < 0.35) return;
+      if (pointA.visibility !== undefined && pointA.visibility < 0.40) return;
+      if (pointB.visibility !== undefined && pointB.visibility < 0.40) return;
 
       ctx.beginPath();
       ctx.moveTo(pointA.x * canvas.width, pointA.y * canvas.height);
@@ -348,7 +405,7 @@ export default function CameraAnalysisPage() {
     });
 
     landmarks.forEach((landmark, index) => {
-      if (landmark.visibility !== undefined && landmark.visibility < 0.35) return;
+      if (landmark.visibility !== undefined && landmark.visibility < 0.40) return;
 
       const x = landmark.x * canvas.width;
       const y = landmark.y * canvas.height;
@@ -385,6 +442,11 @@ export default function CameraAnalysisPage() {
     const timestamp = performance.now();
 
     try {
+      // Check ambient lighting periodically
+      if (Math.random() < 0.05) {
+        checkLightingQuality(video);
+      }
+
       const result = poseLandmarkerRef.current.detectForVideo(video, timestamp);
 
       if (result.landmarks && result.landmarks.length > 0) {
@@ -435,7 +497,17 @@ export default function CameraAnalysisPage() {
                 if (res.metrics?.romPercentage !== undefined) {
                   setRomPercentage(res.metrics.romPercentage);
                 }
-                
+                if (res.metrics?.detectionMode) {
+                  setPlankMode(res.metrics.detectionMode);
+                }
+
+                // Visibility Warning check
+                if (!res.success && res.feedback) {
+                  setVisibilityWarning(res.feedback);
+                } else {
+                  setVisibilityWarning(null);
+                }
+
                 const inFrame = res.metrics?.inBicepFrame ?? res.metrics?.inHammerFrame ?? true;
                 drawLandmarks(smoothLandmarks, res.isCorrectForm, inFrame);
               }
@@ -452,6 +524,7 @@ export default function CameraAnalysisPage() {
         }
       } else {
         setLandmarksDetected(false);
+        setVisibilityWarning("No person detected in frame. Please step in front of the camera.");
         const canvas = canvasRef.current;
         if (canvas) {
           const ctx = canvas.getContext("2d");
@@ -466,7 +539,7 @@ export default function CameraAnalysisPage() {
   };
 
   // =========================
-  // START AI DETECTION
+  // START AI DETECTION (With 2-second Get Ready Countdown)
   // =========================
   const startDetection = async () => {
     if (!cameraOn) {
@@ -478,7 +551,23 @@ export default function CameraAnalysisPage() {
       setFeedback("Initializing AI Vision & Kinematic Engine...");
       poseLandmarkerRef.current = await createPoseLandmarker();
       setDetecting(true);
-      setFeedback("AI Vision active! Step back so your shoulders and arms are visible.");
+
+      // Start 2-second starting position calibration
+      setGetReadyCountdown(2);
+      let count = 2;
+      const countdownInterval = setInterval(() => {
+        count -= 1;
+        if (count > 0) {
+          setGetReadyCountdown(count);
+        } else if (count === 0) {
+          setGetReadyCountdown("GO!");
+        } else {
+          clearInterval(countdownInterval);
+          setGetReadyCountdown(null);
+        }
+      }, 1000);
+
+      setFeedback(isTimerExercise ? "Hold a steady plank position with level shoulders." : "AI Vision active! Step into frame and perform your set.");
 
       if (!animationRef.current) {
         animationRef.current = requestAnimationFrame(detectPose);
@@ -500,6 +589,7 @@ export default function CameraAnalysisPage() {
 
     setDetecting(false);
     setLandmarksDetected(false);
+    setGetReadyCountdown(null);
     smoothedLandmarksRef.current = null;
 
     const canvas = canvasRef.current;
@@ -509,6 +599,15 @@ export default function CameraAnalysisPage() {
     }
 
     setFeedback("AI movement detection paused.");
+  };
+
+  // =========================
+  // FORMAT SECONDS TO MM:SS
+  // =========================
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   // =========================
@@ -582,7 +681,7 @@ export default function CameraAnalysisPage() {
             </h1>
 
             <p className="mt-1 text-sm sm:text-base text-slate-600 leading-relaxed">
-              Real-time computer vision movement detection, anti-jitter skeletal landmark tracking &amp; full-cycle repetition counting.
+              Real-time computer vision movement detection, anti-jitter skeletal landmark tracking &amp; {isTimerExercise ? "hold stability timer" : "full-cycle repetition counting"}.
             </p>
           </div>
 
@@ -619,7 +718,7 @@ export default function CameraAnalysisPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950"
             >
               <RefreshCw size={14} />
-              Reset Reps
+              {isTimerExercise ? "Reset Timer" : "Reset Reps"}
             </button>
 
             {workoutContext && (
@@ -651,6 +750,12 @@ export default function CameraAnalysisPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {isLowLight && (
+                    <span className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-mono font-bold uppercase text-amber-400">
+                      <Sun size={12} /> Low Light
+                    </span>
+                  )}
+
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider ${
                       cameraOn
@@ -698,26 +803,76 @@ export default function CameraAnalysisPage() {
                   </div>
                 )}
 
+                {/* GET READY COUNTDOWN OVERLAY */}
+                {getReadyCountdown !== null && (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <p className="text-sm font-bold uppercase tracking-widest text-[#B8F23A]">
+                      Get Into Position
+                    </p>
+                    <p className="mt-2 text-7xl font-black font-mono text-white animate-scale-up">
+                      {getReadyCountdown}
+                    </p>
+                    <p className="mt-2 text-xs text-[#D2D2CC]">
+                      Hold your starting posture steady
+                    </p>
+                  </div>
+                )}
+
+                {/* VISIBILITY WARNING BANNER */}
+                {visibilityWarning && detecting && !getReadyCountdown && (
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-black/85 px-4 py-2 text-xs font-semibold text-amber-300 shadow-xl backdrop-blur-md">
+                    <AlertTriangle size={15} className="shrink-0 text-amber-400 animate-pulse" />
+                    <span>{visibilityWarning}</span>
+                  </div>
+                )}
+
                 {/* OVERLAY TELEMETRY HUDS */}
                 {detecting && (
                   <>
-                    {/* TOP LEFT: REP HUD */}
+                    {/* TOP LEFT: REP OR PLANK HOLD TIMER HUD */}
                     <div className="absolute left-4 top-4 flex items-center gap-3 rounded-2xl border border-white/15 bg-[#060608]/90 backdrop-blur-md px-4 py-2.5 shadow-xl">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
-                          Reps
-                        </p>
-                        <p className="text-2xl font-black font-mono text-[#B8F23A]">{reps}</p>
-                      </div>
-                      <div className="h-8 w-px bg-white/10" />
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
-                          Stage
-                        </p>
-                        <p className="text-xs font-mono font-bold uppercase text-[#F5F5F0]">
-                          {stage}
-                        </p>
-                      </div>
+                      {isTimerExercise ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <Timer size={20} className="text-[#B8F23A] animate-pulse" />
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
+                                Hold Duration
+                              </p>
+                              <p className="text-2xl font-black font-mono text-[#B8F23A]">
+                                {formatTimer(reps)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="h-8 w-px bg-white/10" />
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
+                              Status
+                            </p>
+                            <p className="text-xs font-mono font-bold uppercase text-[#F5F5F0]">
+                              {stage === "holding" ? "Locked In" : "Paused"}
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
+                              Reps
+                            </p>
+                            <p className="text-2xl font-black font-mono text-[#B8F23A]">{reps}</p>
+                          </div>
+                          <div className="h-8 w-px bg-white/10" />
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
+                              Stage
+                            </p>
+                            <p className="text-xs font-mono font-bold uppercase text-[#F5F5F0]">
+                              {stage}
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* TOP RIGHT: FORM QUALITY STATUS (GOOD FORM vs BAD FORM) */}
@@ -743,10 +898,10 @@ export default function CameraAnalysisPage() {
                       </div>
                     </div>
 
-                    {/* BOTTOM OVERLAY: ROM PROGRESS BAR */}
+                    {/* BOTTOM OVERLAY: ROM / STABILITY PROGRESS BAR */}
                     <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-white/10 bg-[#060608]/85 backdrop-blur-md p-2.5">
                       <div className="flex justify-between text-[11px] font-mono font-bold text-[#D2D2CC] mb-1.5">
-                        <span>Range of Motion (ROM)</span>
+                        <span>{isTimerExercise ? "Core & Shoulder Stability" : "Range of Motion (ROM)"}</span>
                         <span className="text-[#B8F23A]">{romPercentage}%</span>
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
@@ -800,7 +955,7 @@ export default function CameraAnalysisPage() {
                     disabled={!cameraOn}
                     className="rounded-full bg-slate-950 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-all duration-300 hover:bg-slate-800 shadow-xs disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Start AI Form Tracking
+                    {isTimerExercise ? "Start Plank Timer" : "Start AI Form Tracking"}
                   </button>
                 ) : (
                   <button
@@ -871,7 +1026,7 @@ export default function CameraAnalysisPage() {
                   <option value="Lateral Raise">Lateral Raise</option>
                   <option value="Lunge">Lunge</option>
                   <option value="Jumping Jacks">Jumping Jacks</option>
-                  <option value="Plank">Plank</option>
+                  <option value="Plank">Plank (Hold Timer)</option>
                   <option value="Hammer Curl">Hammer Curl</option>
                 </select>
               </div>
@@ -882,12 +1037,13 @@ export default function CameraAnalysisPage() {
                   Session Telemetry
                 </h2>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                <div className="grid grid-cols-2 gap-3">                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      Total Reps
+                      {isTimerExercise ? "Hold Time" : "Total Reps"}
                     </p>
-                    <p className="mt-1 text-3xl font-black font-mono text-slate-950">{reps}</p>
+                    <p className="mt-1 text-3xl font-black font-mono text-slate-950">
+                      {isTimerExercise ? `${reps}s` : reps}
+                    </p>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
@@ -945,7 +1101,7 @@ export default function CameraAnalysisPage() {
                     )}
                     {jointAngles.backAngle !== null && jointAngles.backAngle !== undefined && (
                       <div className="flex justify-between">
-                        <span>Torso / Spine Angle:</span>
+                        <span>Spine / Torso Alignment:</span>
                         <span className="font-bold text-slate-900">{jointAngles.backAngle}°</span>
                       </div>
                     )}
@@ -958,22 +1114,41 @@ export default function CameraAnalysisPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <Target size={16} className="text-slate-900" />
                   <h3 className="text-sm font-bold uppercase tracking-wider text-slate-950">
-                    Rep Counting Rules
+                    {isTimerExercise ? "Plank Hold Rules" : "Rep Counting Rules"}
                   </h3>
                 </div>
                 <ul className="space-y-2 text-xs text-slate-600 leading-relaxed">
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>Form Verification:</strong> Reps increment ONLY when executed in <strong>Good Form</strong>.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>1 Full Cycle:</strong> Must start from extended bottom (&gt;150°) then curl up to contraction (&lt;45°).</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>Elbow Anchor:</strong> Pinned to ribs throughout. Swinging arms triggers <strong>Bad Form</strong> and discards rep.</span>
-                  </li>
+                  {isTimerExercise ? (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span><strong>Timer Mode:</strong> Duration accumulates in seconds only while maintaining <strong>Good Form</strong>.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span><strong>Webcam Shoulder View:</strong> Tracks shoulder level, elbow stack, and spine neutrality automatically.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span><strong>Auto-Pause:</strong> Hip sag or shoulder tilt pauses the timer until form is corrected.</span>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span><strong>Form Verification:</strong> Reps increment ONLY when executed in <strong>Good Form</strong>.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span><strong>Full Cycle State Machine:</strong> Strict transition from bottom/extended phase to peak contraction.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span><strong>Debounce Protection:</strong> Prevents false rapid counts or momentum cheats.</span>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
             </div>

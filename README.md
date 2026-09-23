@@ -1,6 +1,27 @@
+---
+title: FitLens AI - Intelligent Pose & Movement Coach
+emoji: 🏋️‍♂️
+colorFrom: green
+colorTo: lime
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Real-time AI exercise coaching with MediaPipe WASM & kinematic state machines.
+---
+
 # FitLens AI - Autonomous Intelligent Workout & Biomechanics Coaching Platform
 
 FitLens AI is an end-to-end fitness platform that performs real-time computer-vision exercise movement analysis, kinematic angle evaluation, automated repetition counting, and posture feedback alongside workout management.
+
+---
+
+## 🚀 Hugging Face Spaces Deployment
+
+FitLens AI is fully configured for Hugging Face Spaces deployment:
+- **Port**: 7860
+- **Container**: Multi-stage Docker (`node:20-alpine` + `python:3.11-slim`)
+- **WebAssembly Acceleration**: Client-side MediaPipe WASM runs at 30+ FPS directly in the browser with zero server video egress.
 
 ---
 
@@ -9,21 +30,17 @@ FitLens AI is an end-to-end fitness platform that performs real-time computer-vi
 The system operates across three coordinated tiers:
 
 ```
-[React + Vite Frontend :5173]
+[React + Vite Frontend :5173 / :7860]
        │  ▲
-       │  │ (REST / JWT)
+       │  │ (REST / Kinematics Stream)
        ▼  │
-[Spring Boot Backend :8080]
-       │  ▲
-       │  │ (Kinematics & Movement Stream)
-       ▼  │
-[Python AI Microservice :8001]
-   └── (MediaPipe / Biomechanics State Machines / ONNX Models)
+[Python AI Microservice :8001 / :7860]
+   └── (MediaPipe / Biomechanics State Machines / Kinematic Detectors)
 ```
 
 1. **Frontend (`frontend/`)**: React 19, TailwindCSS, MediaPipe WASM client-side pose landmark extractor, and real-time form analysis HUD.
-2. **Backend (`backend/`)**: Spring Boot 4.1.0, Java 17, Spring Security (Stateless JWT), Spring Data JPA + MySQL, and Movement Detection proxy controller.
-3. **AI Microservice (`ocr-service/` / `ai-service/`)**: FastAPI, Uvicorn, Python 3.10+, modular kinematic state machines (`BicepCurlDetector`, `SquatDetector`, `PushUpDetector`, `ShoulderPressDetector`).
+2. **AI Microservice (`ocr-service/`)**: FastAPI, Uvicorn, Python 3.11, modular kinematic state machines (`BicepCurlDetector`, `SquatDetector`, `PushUpDetector`, `ShoulderPressDetector`, `PlankDetector`, `LungeDetector`, `HammerCurlDetector`, `LateralRaiseDetector`, `JumpingJacksDetector`).
+3. **Backend (`backend/`)**: Optional Spring Boot enterprise database & authentication tier.
 
 ---
 
@@ -46,18 +63,7 @@ pip install -r requirements.txt
 python run_service.py
 ```
 
-### 2. Spring Boot Backend
-
-```powershell
-# Navigate to backend
-cd backend
-
-# Ensure MySQL server is running locally on port 3306 with database `fitlens_db`
-# Compile and start backend (Runs on http://localhost:8080)
-.\mvnw.cmd spring-boot:run
-```
-
-### 3. React Frontend
+### 2. React Frontend
 
 ```powershell
 # Navigate to frontend
@@ -74,12 +80,17 @@ npm run dev
 
 ## 🦾 Supported Exercises & Movement Telemetry
 
-| Exercise | Tracked Joints / Angles | Rep Count Criteria | Form Error Flags |
+| Exercise | Tracked Joints / Angles | Rep Count Criteria | Form Invariant Checks |
 |---|---|---|---|
-| **Bicep Curl** | Elbow Flexion (11-13-15 / 12-14-16), Shoulder Angle | Down: > 155°, Up: < 50° | Shoulder swinging / elbow drift > 35° |
-| **Squat** | Hip-Knee-Ankle (23-25-27), Trunk Angle | Stand: > 160°, Squat: ≤ 95° | Chest inclination < 65° |
+| **Bicep Curl** | Elbow Flexion (11-13-15 / 12-14-16) | Down: > 155°, Up: < 50° | Shoulder swinging / elbow drift > 15cm |
+| **Squat** | Hip-Knee-Ankle (23-25-27), Trunk Angle | Stand: > 160°, Squat: ≤ 95° | Valgus knee collapse, Chest drop < 65° |
 | **Push-Up** | Elbow Flexion, Shoulder-Hip-Ankle Plank | Top: > 155°, Bottom: ≤ 90° | Hip sag / Pike (< 150° or > 195°) |
-| **Shoulder Press** | Overhead Elbow Lockout, Arm Symmetry | Rack: ≤ 85°, Lockout: > 160° | Left/Right asymmetry > 25° |
+| **Shoulder Press** | Overhead Elbow Lockout, Arm Symmetry | Rack: ≤ 85°, Lockout: > 160° | Rib flare, left/right asymmetry > 25° |
+| **Plank** | Torso Alignment (160°–180°) | Dual-view (Full body & Webcam shoulder) | Sag/Pike auto-pause timer |
+| **Lunge** | Lead Knee Angle (75°–155°) | Down: ≤ 90°, Stand: > 155° | Knee overextension past toes |
+| **Hammer Curl** | Neutral Elbow Angle (35°–155°) | Down: > 155°, Up: < 50° | Neutral grip trajectory consistency |
+| **Lateral Raise** | Shoulder Abduction (20°–85°) | Bottom: < 25°, Top: > 80° | Trapezius shrug compensation (<15°) |
+| **Jumping Jacks** | Shoulder Abduction & Stance Width | Closed $\rightarrow$ Open (> 130°) | Foot separation & arm synchronization |
 
 ---
 
@@ -90,7 +101,7 @@ npm run dev
   ```json
   {
     "exerciseName": "Bicep Curl",
-    "landmarks": [{"x": 0.5, "y": 0.2, "z": 0.0, "visibility": 1.0}, ...],
+    "landmarks": [{"x": 0.5, "y": 0.2, "z": 0.0, "visibility": 1.0}],
     "currentReps": 3,
     "currentStage": "down"
   }
@@ -110,6 +121,3 @@ npm run dev
     "metrics": { "flexionAngle": 42.1, "romPercentage": 98 }
   }
   ```
-
-### Save Analysis to Workout (`POST /api/ai/movement/workouts/{workoutId}/exercises/{workoutExerciseId}/save-analysis`)
-- Saves the computed `formScore`, `reps`, and `aiFeedback` directly into the database.

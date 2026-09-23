@@ -16,10 +16,17 @@ class BaseExerciseDetector(ABC):
     def calculate_angle(
         a: Optional[LandmarkPoint],
         b: Optional[LandmarkPoint],
-        c: Optional[LandmarkPoint]
+        c: Optional[LandmarkPoint],
+        min_visibility: float = 0.40
     ) -> Optional[float]:
-        """Calculates the 2D joint angle between three landmarks: a (start), b (vertex), c (end)"""
+        """Calculates the 2D joint angle between three landmarks: a (start), b (vertex), c (end) with confidence filtering."""
         if not a or not b or not c:
+            return None
+        
+        # Landmark confidence / visibility check
+        if (a.visibility is not None and a.visibility < min_visibility) or \
+           (b.visibility is not None and b.visibility < min_visibility) or \
+           (c.visibility is not None and c.visibility < min_visibility):
             return None
         
         # Calculate angle in degrees
@@ -30,10 +37,24 @@ class BaseExerciseDetector(ABC):
         return round(angle, 1)
 
     @staticmethod
-    def get_landmark(landmarks: List[LandmarkPoint], index: int) -> Optional[LandmarkPoint]:
+    def get_landmark(landmarks: List[LandmarkPoint], index: int, min_visibility: float = 0.40) -> Optional[LandmarkPoint]:
         if 0 <= index < len(landmarks):
-            return landmarks[index]
+            lm = landmarks[index]
+            if lm.visibility is not None and lm.visibility < min_visibility:
+                return None
+            return lm
         return None
+
+    @staticmethod
+    def are_landmarks_visible(landmarks: List[LandmarkPoint], indices: List[int], min_visibility: float = 0.45) -> bool:
+        """Returns True if all required landmark indices are present and meet minimum confidence."""
+        for idx in indices:
+            if idx < 0 or idx >= len(landmarks):
+                return False
+            lm = landmarks[idx]
+            if lm.visibility is not None and lm.visibility < min_visibility:
+                return False
+        return True
 
     @abstractmethod
     def analyze(
@@ -45,3 +66,4 @@ class BaseExerciseDetector(ABC):
     ) -> MovementAnalysisResponse:
         """Analyze landmark telemetry and determine movement stage, reps, form score & cues."""
         pass
+
