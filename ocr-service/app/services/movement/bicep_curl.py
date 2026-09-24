@@ -22,7 +22,8 @@ class BicepCurlDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
         
         # 1. Extract Arm and Torso Keypoints
         l_shoulder = self.get_landmark(landmarks, 11)
@@ -100,50 +101,55 @@ class BicepCurlDetector(BaseExerciseDetector):
             is_good_form = False
             form_fault_reason = "Keep elbows pinned to your ribs. Avoid swinging."
 
-        # 3. State Machine & Continuous Multi-Rep Counting
+        # 3. State Machine & Full-Cycle Multi-Rep Counting (down -> up -> down = 1)
         # Extension (Down): Elbow Angle >= 140° (Natural full extension)
         # Peak Flexion (Up): Elbow Angle <= 50° (Full curl)
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
         feedback = "Good Form. Keep going!" if is_good_form else form_fault_reason
+        ai_state = "ANALYZING"
 
         if in_bicep_frame:
             if active_angle >= 140:
                 new_stage = "down"
-                if is_good_form:
-                    feedback = "Good Form. Arms extended down. Ready to curl."
-                else:
-                    feedback = f"Bad Form: {form_fault_reason}"
-            elif active_angle <= 50:
-                if current_stage == "down":
-                    new_stage = "up"
+                if session_data.get("inflection_reached"):
+                    # Completed full cycle: down -> up -> down!
+                    reps += 1
+                    rep_incremented = True
+                    ai_state = "REP_COUNTING"
                     if is_good_form:
-                        reps += 1
-                        rep_incremented = True
-                        feedback = "Rep Counted! (Good Form)"
+                        feedback = "Rep Counted! (Good Form - Full Extension)"
                     else:
-                        rep_incremented = False
-                        feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper form'})"
-                elif current_stage == "up":
-                    new_stage = "up"
+                        feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                    session_data["inflection_reached"] = False
+                else:
+                    # Resting or starting at bottom extension
+                    ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
                     if is_good_form:
-                        feedback = "Holding contraction. Lower arms down for next rep."
+                        feedback = "Good Form. Arms extended down. Ready to curl."
                     else:
                         feedback = f"Bad Form: {form_fault_reason}"
+            elif active_angle <= 50:
+                new_stage = "up"
+                session_data["inflection_reached"] = True
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    feedback = "Holding peak contraction. Lower arms down to full extension."
                 else:
-                    new_stage = "up"
-                    feedback = "Extend arms down to begin next rep."
+                    feedback = f"Bad Form: {form_fault_reason}"
             else:
                 # In transit between 50° and 140°
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
                 if is_good_form:
-                    if current_stage == "down":
-                        feedback = "Curling up with Good Form..."
-                    else:
+                    if session_data.get("inflection_reached"):
                         feedback = "Lowering arms down to full extension..."
+                    else:
+                        feedback = "Curling up with Good Form..."
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
         else:
+            ai_state = "FORM_FEEDBACK"
             feedback = f"Bad Form: {form_fault_reason or 'Align arms into bicep curl structure.'}"
 
         rom_pct = max(0, min(100, int((150 - active_angle) / (150 - 45) * 100)))
@@ -161,10 +167,12 @@ class BicepCurlDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else (0.0 if not in_bicep_frame else 70.0),
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "flexionAngle": round(active_angle, 1),

@@ -32,9 +32,14 @@ class MovementAnalysisResponse(BaseModel):
     stage: str = "up"  # "up" | "down" | "hold"
     repetitionCount: int = 0
     repIncremented: bool = False
-    formScore: float = 100.0  # 0 to 100
+    formScore: Optional[float] = 100.0  # 0 to 100, or None if mismatch / position adjustment
     isCorrectForm: bool = True
     feedback: str = ""
     jointAngles: Optional[JointAngles] = None
     metrics: Dict[str, Any] = Field(default_factory=dict)
+    aiState: str = "READY"  # "READY" | "POSITION_ADJUSTMENT" | "EXERCISE_MISMATCH" | "ANALYZING" | "REP_COUNTING" | "FORM_FEEDBACK"
+    detectedExercise: Optional[str] = None
+    poseQuality: Optional[Dict[str, Any]] = None
+    sessionData: Optional[Dict[str, Any]] = None
     timestamp: Optional[float] = None
+

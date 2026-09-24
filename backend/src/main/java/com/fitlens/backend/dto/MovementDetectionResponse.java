@@ -1,5 +1,6 @@
 package com.fitlens.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MovementDetectionResponse {
 
     private Boolean success;
@@ -23,7 +25,12 @@ public class MovementDetectionResponse {
     private String feedback;
     private JointAnglesDto jointAngles;
     private Map<String, Object> metrics;
+    private String aiState;
+    private String detectedExercise;
+    private Map<String, Object> poseQuality;
+    private Map<String, Object> sessionData;
     private Double timestamp;
+
 
     @Data
     @Builder

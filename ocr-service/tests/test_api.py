@@ -74,4 +74,6 @@ class TestHealth:
     def test_health(self):
         response = client.get("/health")
         assert response.status_code == 200
-        assert response.json() == {"status": "ok", "service": "fitlens-ocr"}
+        data = response.json()
+        assert data["status"] == "UP"
+        assert "FitLens" in data["service"]

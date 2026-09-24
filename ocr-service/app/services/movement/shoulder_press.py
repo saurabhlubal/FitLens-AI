@@ -22,7 +22,8 @@ class ShoulderPressDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         # 1. Extract Shoulder/Arm Keypoints
         l_hip = self.get_landmark(landmarks, 23)
@@ -67,45 +68,47 @@ class ShoulderPressDetector(BaseExerciseDetector):
                 is_good_form = False
                 form_fault_reason = "Asymmetrical press! Push both arms evenly overhead."
 
-        # 3. State Machine & Full-Cycle Rep Counting
+        # 3. State Machine & Full-Cycle Rep Counting (down -> up -> down = 1)
         # Lockout overhead (Up): Elbow Angle >= 155°
         # Bottom rack (Down): Elbow Angle <= 90°
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
         feedback = "Good Form. Press overhead with control." if is_good_form else form_fault_reason
+        ai_state = "ANALYZING"
 
         if active_elbow >= 155:
-            if current_stage == "down":
-                new_stage = "up"
-                if is_good_form:
-                    reps += 1
-                    rep_incremented = True
-                    feedback = "Rep Counted! (Good Form - Full Lockout)"
-                else:
-                    rep_incremented = False
-                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper pressing form'})"
-            elif current_stage == "up":
-                new_stage = "up"
-                if is_good_form:
-                    feedback = "Good Form. Locked out overhead. Lower down to shoulders."
-                else:
-                    feedback = f"Bad Form: {form_fault_reason}"
-            else:
-                new_stage = "up"
-                feedback = "Locked out overhead. Ready to lower."
-        elif active_elbow <= 90:
-            new_stage = "down"
+            new_stage = "up"
+            session_data["inflection_reached"] = True
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
-                feedback = "Full depth reached (Good Form)! Drive weights straight up."
+                feedback = "Good lockout overhead! Lower weights under control to shoulders."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
-        else:
-            if is_good_form:
-                if current_stage == "down":
-                    feedback = "Pressing overhead with Good Form..."
+        elif active_elbow <= 90:
+            new_stage = "down"
+            if session_data.get("inflection_reached"):
+                reps += 1
+                rep_incremented = True
+                ai_state = "REP_COUNTING"
+                if is_good_form:
+                    feedback = "Rep Counted! (Good Form - Full Press Cycle)"
                 else:
+                    feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                session_data["inflection_reached"] = False
+            else:
+                ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    feedback = "Good Form. Weights at shoulder level. Ready to press."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+            if is_good_form:
+                if session_data.get("inflection_reached"):
                     feedback = "Lowering under control with Good Form..."
+                else:
+                    feedback = "Pressing overhead with Good Form..."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
 
@@ -122,13 +125,16 @@ class ShoulderPressDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else 70.0,
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "elbowAngle": round(active_elbow, 1),
                 "romPercentage": rom_pct
             }
         )
+

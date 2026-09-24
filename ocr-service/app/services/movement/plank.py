@@ -22,7 +22,8 @@ class PlankDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         # 1. Extract Alignment Keypoints
         l_shoulder = self.get_landmark(landmarks, 11)
@@ -84,16 +85,20 @@ class PlankDetector(BaseExerciseDetector):
             backAngle=body_angle
         )
 
+        ai_state = "REP_COUNTING" if (rep_incremented and is_good_form) else ("FORM_FEEDBACK" if not is_good_form else "ANALYZING")
+
         return MovementAnalysisResponse(
             success=True,
             exerciseName=self.name,
             stage="holding" if is_good_form else "warning",
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else 70.0,
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "spineAlignmentAngle": round(body_angle, 1),
@@ -101,3 +106,4 @@ class PlankDetector(BaseExerciseDetector):
                 "romPercentage": 100 if is_good_form else 50
             }
         )
+

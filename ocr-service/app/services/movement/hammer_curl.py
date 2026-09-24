@@ -18,7 +18,8 @@ class HammerCurlDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         l_shoulder = self.get_landmark(landmarks, 11)
         l_elbow = self.get_landmark(landmarks, 13)
@@ -93,42 +94,45 @@ class HammerCurlDetector(BaseExerciseDetector):
         rep_incremented = False
         reps = current_reps
         feedback = "Good Form. Neutral hammer grip." if is_good_form else form_fault_reason
+        ai_state = "ANALYZING"
 
         if in_hammer_frame:
             if active_angle >= 140:
                 new_stage = "down"
-                if is_good_form:
-                    feedback = "Good Form. Arms fully extended. Ready to curl."
-                else:
-                    feedback = f"Bad Form: {form_fault_reason}"
-            elif active_angle <= 50:
-                if current_stage == "down":
-                    new_stage = "up"
+                if session_data.get("inflection_reached"):
+                    reps += 1
+                    rep_incremented = True
+                    ai_state = "REP_COUNTING"
                     if is_good_form:
-                        reps += 1
-                        rep_incremented = True
-                        feedback = "Rep Counted! (Good Form)"
+                        feedback = "Rep Counted! (Good Form - Full Extension)"
                     else:
-                        rep_incremented = False
-                        feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper form'})"
-                elif current_stage == "up":
-                    new_stage = "up"
+                        feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                    session_data["inflection_reached"] = False
+                else:
+                    ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
                     if is_good_form:
-                        feedback = "Holding peak contraction. Lower down for next rep."
+                        feedback = "Good Form. Arms fully extended. Ready to curl."
                     else:
                         feedback = f"Bad Form: {form_fault_reason}"
-                else:
-                    new_stage = "up"
-                    feedback = "Extend arms down to begin next rep."
-            else:
+            elif active_angle <= 50:
+                new_stage = "up"
+                session_data["inflection_reached"] = True
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
                 if is_good_form:
-                    if current_stage == "down":
-                        feedback = "Curling up with Good Form..."
-                    else:
+                    feedback = "Holding peak contraction. Lower down for next rep."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
+            else:
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    if session_data.get("inflection_reached"):
                         feedback = "Lowering arms down to full extension..."
+                    else:
+                        feedback = "Curling up with Good Form..."
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
         else:
+            ai_state = "FORM_FEEDBACK"
             feedback = f"Bad Form: {form_fault_reason or 'Align arms into neutral hammer curl frame.'}"
 
         rom_pct = max(0, min(100, int((150 - active_angle) / (150 - 45) * 100)))
@@ -146,10 +150,12 @@ class HammerCurlDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else (0.0 if not in_hammer_frame else 70.0),
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "flexionAngle": round(active_angle, 1),

@@ -22,7 +22,8 @@ class JumpingJackDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         # 1. Extract Arm and Leg Keypoints
         l_hip = self.get_landmark(landmarks, 23)
@@ -67,45 +68,47 @@ class JumpingJackDetector(BaseExerciseDetector):
                 is_good_form = False
                 form_fault_reason = "Sweep both arms evenly overhead."
 
-        # 3. State Machine & Full-Cycle Rep Counting
+        # 3. State Machine & Full-Cycle Rep Counting (down -> up -> down = 1)
         # Arms Down / In (Down): Arm Angle <= 45°
         # Arms Overhead / Out (Up): Arm Angle >= 135°
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
         feedback = "Good Form. Perform jumping jacks with dynamic rhythm." if is_good_form else form_fault_reason
+        ai_state = "ANALYZING"
 
         if active_arm_angle <= 45:
             new_stage = "down"
-            if is_good_form:
-                feedback = "Good Form. Feet together, hands down."
-            else:
-                feedback = f"Bad Form: {form_fault_reason}"
-        elif active_arm_angle >= 135:
-            if current_stage == "down":
-                new_stage = "up"
+            if session_data.get("inflection_reached"):
+                reps += 1
+                rep_incremented = True
+                ai_state = "REP_COUNTING"
                 if is_good_form:
-                    reps += 1
-                    rep_incremented = True
-                    feedback = "Rep Counted! (Good Form - Full Overhead Sweep)"
+                    feedback = "Rep Counted! (Good Form - Full Overhead Sweep & Rebound)"
                 else:
-                    rep_incremented = False
-                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper sweep'})"
-            elif current_stage == "up":
-                new_stage = "up"
+                    feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                session_data["inflection_reached"] = False
+            else:
+                ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
                 if is_good_form:
-                    feedback = "Good Form. Arms overhead! Bounce back to center."
+                    feedback = "Good Form. Feet together, hands down."
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
-            else:
-                new_stage = "up"
-                feedback = "Arms overhead. Ready to rebound."
-        else:
+        elif active_arm_angle >= 135:
+            new_stage = "up"
+            session_data["inflection_reached"] = True
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
-                if current_stage == "down":
-                    feedback = "Jumping out with Good Form..."
-                else:
+                feedback = "Good Form. Arms overhead! Bounce back to center."
+            else:
+                feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+            if is_good_form:
+                if session_data.get("inflection_reached"):
                     feedback = "Returning to center with Good Form..."
+                else:
+                    feedback = "Jumping out with Good Form..."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
 
@@ -122,13 +125,16 @@ class JumpingJackDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else 70.0,
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "armAngle": round(active_arm_angle, 1),
                 "romPercentage": rom_pct
             }
         )
+

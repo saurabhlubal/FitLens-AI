@@ -22,7 +22,8 @@ class PushUpDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         # 1. Extract Arm & Torso Keypoints
         l_shoulder = self.get_landmark(landmarks, 11)
@@ -76,45 +77,47 @@ class PushUpDetector(BaseExerciseDetector):
                 is_good_form = False
                 form_fault_reason = "Hips piked too high! Maintain a flat plank."
 
-        # 3. State Machine & Full-Cycle Rep Counting
+        # 3. State Machine & Full-Cycle Rep Counting (up -> down -> up = 1)
         # Top plank (Up): Elbow Angle > 150°
         # Bottom chest to floor (Down): Elbow Angle <= 95°
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
         feedback = "Good Form. Solid push-up plank." if is_good_form else form_fault_reason
+        ai_state = "ANALYZING"
 
         if active_elbow > 150:
-            if current_stage == "down":
-                new_stage = "up"
+            new_stage = "up"
+            if session_data.get("inflection_reached"):
+                reps += 1
+                rep_incremented = True
+                ai_state = "REP_COUNTING"
                 if is_good_form:
-                    reps += 1
-                    rep_incremented = True
                     feedback = "Rep Counted! (Good Form - Full Press)"
                 else:
-                    rep_incremented = False
-                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper plank'})"
-            elif current_stage == "up":
-                new_stage = "up"
+                    feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                session_data["inflection_reached"] = False
+            else:
+                ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
                 if is_good_form:
                     feedback = "Good Form. Top plank held. Lower chest down."
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
-            else:
-                new_stage = "up"
-                feedback = "Plank held. Ready for push-ups."
         elif active_elbow <= 95:
             new_stage = "down"
+            session_data["inflection_reached"] = True
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
                 feedback = "Full depth reached (Good Form)! Press straight up."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
         else:
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
-                if current_stage == "up":
-                    feedback = "Lowering chest with Good Form..."
-                else:
+                if session_data.get("inflection_reached"):
                     feedback = "Pushing up with Good Form..."
+                else:
+                    feedback = "Lowering chest with Good Form..."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
 
@@ -132,10 +135,12 @@ class PushUpDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else 70.0,
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "elbowAngle": round(active_elbow, 1),
@@ -143,3 +148,4 @@ class PushUpDetector(BaseExerciseDetector):
                 "romPercentage": rom_pct
             }
         )
+

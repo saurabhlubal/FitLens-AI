@@ -22,7 +22,8 @@ class SquatDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         # 1. Extract Leg & Torso Keypoints
         l_hip = self.get_landmark(landmarks, 23)
@@ -70,46 +71,48 @@ class SquatDetector(BaseExerciseDetector):
             is_good_form = False
             form_fault_reason = "Chest collapsing forward! Keep spine neutral and eyes forward."
 
-        # 3. State Machine & Full-Cycle Rep Counting
+        # 3. State Machine & Full-Cycle Rep Counting (up -> down -> up = 1)
         # Standing (Up): Knee Angle > 155°
         # Deep Squat (Down): Knee Angle <= 100° (Optimal ~90°)
         new_stage = current_stage
         rep_incremented = False
         reps = current_reps
         feedback = "Good Form. Keep chest proud." if is_good_form else form_fault_reason
+        ai_state = "ANALYZING"
 
         if active_knee > 155:
-            if current_stage == "down":
-                new_stage = "up"
+            new_stage = "up"
+            if session_data.get("inflection_reached"):
+                reps += 1
+                rep_incremented = True
+                ai_state = "REP_COUNTING"
                 if is_good_form:
-                    reps += 1
-                    rep_incremented = True
                     feedback = "Rep Counted! (Good Form - Full Extension)"
                 else:
-                    rep_incremented = False
-                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper squat mechanics'})"
-            elif current_stage == "up":
-                new_stage = "up"
+                    feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                session_data["inflection_reached"] = False
+            else:
+                ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
                 if is_good_form:
                     feedback = "Good Form. Standing tall. Lower hips into squat."
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
-            else:
-                new_stage = "up"
-                feedback = "Standing tall. Ready to squat."
         elif active_knee <= 100:
             new_stage = "down"
+            session_data["inflection_reached"] = True
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
                 feedback = "Great depth reached (Good Form)! Drive through heels to stand."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
         else:
             # Transit zone
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
-                if current_stage == "up":
-                    feedback = "Squatting down with Good Form..."
-                else:
+                if session_data.get("inflection_reached"):
                     feedback = "Driving back up with Good Form..."
+                else:
+                    feedback = "Squatting down with Good Form..."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
 
@@ -128,10 +131,12 @@ class SquatDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else 70.0,
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "kneeAngle": round(active_knee, 1),
@@ -139,3 +144,4 @@ class SquatDetector(BaseExerciseDetector):
                 "romPercentage": rom_pct
             }
         )
+

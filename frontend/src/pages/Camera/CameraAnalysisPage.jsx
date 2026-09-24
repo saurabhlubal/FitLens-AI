@@ -77,6 +77,7 @@ export default function CameraAnalysisPage() {
   const currentRepsRef = useRef(0);
   const currentStageRef = useRef("up");
   const formStatusHistoryRef = useRef([]);
+  const sessionDataRef = useRef({});
 
   // Session ID to discard in-flight async responses after a reset
   const sessionIdRef = useRef(0);
@@ -90,11 +91,14 @@ export default function CameraAnalysisPage() {
   // Real-time AI Telemetry State
   const [reps, setReps] = useState(0);
   const [stage, setStage] = useState("up");
+  const [aiState, setAiState] = useState("READY");
+  const [detectedExercise, setDetectedExercise] = useState(null);
   const [isCorrectForm, setIsCorrectForm] = useState(true);
   const [formStatus, setFormStatus] = useState("Good Form"); // "Good Form" | "Bad Form"
   const [feedback, setFeedback] = useState("Start camera to begin AI movement detection.");
   const [jointAngles, setJointAngles] = useState({});
   const [romPercentage, setRomPercentage] = useState(0);
+
 
   // Workout Session Context (if navigated from workouts)
   const [workoutContext, setWorkoutContext] = useState(null);
@@ -218,9 +222,12 @@ export default function CameraAnalysisPage() {
     currentStageRef.current = "up";
     formStatusHistoryRef.current = [];
     smoothedLandmarksRef.current = null;
+    sessionDataRef.current = {};
 
     setReps(0);
     setStage("up");
+    setAiState("READY");
+    setDetectedExercise(null);
     setIsCorrectForm(true);
     setFormStatus("Good Form");
     setRomPercentage(0);
@@ -404,7 +411,8 @@ export default function CameraAnalysisPage() {
               exercise,
               smoothLandmarks,
               currentRepsRef.current,
-              currentStageRef.current
+              currentStageRef.current,
+              sessionDataRef.current
             )
             .then((res) => {
               if (capturedSessionId !== sessionIdRef.current) {
@@ -412,6 +420,15 @@ export default function CameraAnalysisPage() {
               }
 
               if (res) {
+                if (res.sessionData) {
+                  sessionDataRef.current = res.sessionData;
+                }
+                if (res.aiState) {
+                  setAiState(res.aiState);
+                }
+                if (res.detectedExercise !== undefined) {
+                  setDetectedExercise(res.detectedExercise);
+                }
                 if (res.repetitionCount !== undefined) {
                   setReps(res.repetitionCount);
                   currentRepsRef.current = res.repetitionCount;
@@ -420,7 +437,7 @@ export default function CameraAnalysisPage() {
                   setStage(res.stage);
                   currentStageRef.current = res.stage;
                 }
-                if (res.isCorrectForm !== undefined) {
+                if (res.formScore !== null && res.formScore !== undefined && res.isCorrectForm !== undefined) {
                   setIsCorrectForm(res.isCorrectForm);
                   const status = res.isCorrectForm ? "Good Form" : "Bad Form";
                   setFormStatus(status);
@@ -436,7 +453,7 @@ export default function CameraAnalysisPage() {
                   setRomPercentage(res.metrics.romPercentage);
                 }
                 
-                const inFrame = res.metrics?.inBicepFrame ?? res.metrics?.inHammerFrame ?? true;
+                const inFrame = res.metrics?.inBicepFrame ?? res.metrics?.inHammerFrame ?? (res.aiState !== "POSITION_ADJUSTMENT");
                 drawLandmarks(smoothLandmarks, res.isCorrectForm, inFrame);
               }
             })
@@ -720,6 +737,32 @@ export default function CameraAnalysisPage() {
                       </div>
                     </div>
 
+                    {/* TOP CENTER: AI STATUS BADGE */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-4 flex items-center gap-2 rounded-2xl border border-white/15 bg-[#060608]/90 backdrop-blur-md px-3.5 py-1.5 shadow-xl z-10">
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          aiState === "EXERCISE_MISMATCH"
+                            ? "bg-rose-500 animate-ping"
+                            : aiState === "POSITION_ADJUSTMENT"
+                            ? "bg-amber-400 animate-pulse"
+                            : aiState === "REP_COUNTING"
+                            ? "bg-[#B8F23A] animate-pulse"
+                            : "bg-emerald-400"
+                        }`}
+                      />
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#F5F5F0]">
+                        {aiState === "POSITION_ADJUSTMENT"
+                          ? "Position Adjustment"
+                          : aiState === "EXERCISE_MISMATCH"
+                          ? "Exercise Mismatch"
+                          : aiState === "REP_COUNTING"
+                          ? "Rep Counting"
+                          : aiState === "FORM_FEEDBACK"
+                          ? "Form Coaching"
+                          : "AI Tracking"}
+                      </span>
+                    </div>
+
                     {/* TOP RIGHT: FORM QUALITY STATUS (GOOD FORM vs BAD FORM) */}
                     <div className="absolute right-4 top-4 flex items-center gap-3 rounded-2xl border border-white/15 bg-[#060608]/90 backdrop-blur-md px-4 py-2.5 shadow-xl">
                       <div className="text-right">
@@ -815,7 +858,11 @@ export default function CameraAnalysisPage() {
               {/* LIVE FEEDBACK CUE */}
               <div
                 className={`mt-4 rounded-xl border p-4 transition-all duration-300 ${
-                  !isCorrectForm
+                  aiState === "EXERCISE_MISMATCH"
+                    ? "border-rose-300 bg-rose-50/90 text-rose-950"
+                    : aiState === "POSITION_ADJUSTMENT"
+                    ? "border-amber-300 bg-amber-50/90 text-amber-950"
+                    : !isCorrectForm
                     ? "border-red-200 bg-red-50/80 text-red-900"
                     : "border-slate-200 bg-slate-50 text-slate-900"
                 }`}
@@ -823,15 +870,33 @@ export default function CameraAnalysisPage() {
                 <div className="flex items-center gap-2.5">
                   <Activity
                     size={16}
-                    className={!isCorrectForm ? "text-red-500" : "text-emerald-600"}
+                    className={
+                      aiState === "EXERCISE_MISMATCH"
+                        ? "text-rose-600"
+                        : aiState === "POSITION_ADJUSTMENT"
+                        ? "text-amber-600"
+                        : !isCorrectForm
+                        ? "text-red-500"
+                        : "text-emerald-600"
+                    }
                   />
                   <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
-                    Live Coaching Cue
+                    {aiState === "EXERCISE_MISMATCH"
+                      ? "Exercise Validation Alert"
+                      : aiState === "POSITION_ADJUSTMENT"
+                      ? "Position & Framing Guidance"
+                      : "Live Coaching Cue"}
                   </p>
                 </div>
                 <p
                   className={`mt-1.5 text-sm font-semibold ${
-                    !isCorrectForm ? "text-red-900" : "text-slate-900"
+                    aiState === "EXERCISE_MISMATCH"
+                      ? "text-rose-950"
+                      : aiState === "POSITION_ADJUSTMENT"
+                      ? "text-amber-950"
+                      : !isCorrectForm
+                      ? "text-red-900"
+                      : "text-slate-900"
                   }`}
                 >
                   {feedback}
@@ -901,6 +966,21 @@ export default function CameraAnalysisPage() {
                     >
                       {formStatus}
                     </p>
+                  </div>
+
+                  <div className="col-span-2 rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">AI State:</span>
+                    <span className={`font-bold px-2.5 py-0.5 rounded-full text-[11px] ${
+                      aiState === "EXERCISE_MISMATCH"
+                        ? "bg-rose-100 text-rose-800 border border-rose-200"
+                        : aiState === "POSITION_ADJUSTMENT"
+                        ? "bg-amber-100 text-amber-800 border border-amber-200"
+                        : aiState === "REP_COUNTING"
+                        ? "bg-lime-100 text-slate-900 border border-lime-300"
+                        : "bg-slate-100 text-slate-700 border border-slate-200"
+                    }`}>
+                      {aiState}
+                    </span>
                   </div>
                 </div>
 

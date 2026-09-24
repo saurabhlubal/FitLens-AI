@@ -22,7 +22,8 @@ class LateralRaiseDetector(BaseExerciseDetector):
         current_stage: str,
         session_data: Optional[Dict[str, Any]] = None
     ) -> MovementAnalysisResponse:
-        session_data = session_data or {}
+        if session_data is None:
+            session_data = {}
 
         # 1. Extract Shoulder/Torso Keypoints
         l_hip = self.get_landmark(landmarks, 23)
@@ -77,37 +78,39 @@ class LateralRaiseDetector(BaseExerciseDetector):
         reps = current_reps
         feedback = "Good Form. Raise dumbbells up to shoulder level." if is_good_form else form_fault_reason
 
+        ai_state = "ANALYZING"
         if active_angle <= 35:
             new_stage = "down"
-            if is_good_form:
-                feedback = "Good Form. Arms at sides. Raise outward under control."
-            else:
-                feedback = f"Bad Form: {form_fault_reason}"
-        elif active_angle >= 75:
-            if current_stage == "down":
-                new_stage = "up"
+            if session_data.get("inflection_reached"):
+                reps += 1
+                rep_incremented = True
+                ai_state = "REP_COUNTING"
                 if is_good_form:
-                    reps += 1
-                    rep_incremented = True
-                    feedback = "Rep Counted! (Good Form - Shoulder Level)"
+                    feedback = "Rep Counted! (Good Form - Full Lateral Raise)"
                 else:
-                    rep_incremented = False
-                    feedback = f"Rep Discarded (Bad Form: {form_fault_reason or 'Improper form'})"
-            elif current_stage == "up":
-                new_stage = "up"
+                    feedback = f"Rep Counted! Form note: {form_fault_reason}"
+                session_data["inflection_reached"] = False
+            else:
+                ai_state = "TRACKING" if is_good_form else "FORM_FEEDBACK"
                 if is_good_form:
-                    feedback = "Peak height reached (Good Form). Lower under control."
+                    feedback = "Good Form. Arms at sides. Raise outward under control."
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
-            else:
-                new_stage = "up"
-                feedback = "Arms at shoulder plane. Ready to lower."
-        else:
+        elif active_angle >= 75:
+            new_stage = "up"
+            session_data["inflection_reached"] = True
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:
-                if current_stage == "down":
-                    feedback = "Raising outward with Good Form..."
-                else:
+                feedback = "Peak height reached (Good Form). Lower under control."
+            else:
+                feedback = f"Bad Form: {form_fault_reason}"
+        else:
+            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+            if is_good_form:
+                if session_data.get("inflection_reached"):
                     feedback = "Lowering slowly with Good Form..."
+                else:
+                    feedback = "Raising outward with Good Form..."
             else:
                 feedback = f"Bad Form: {form_fault_reason}"
 
@@ -124,13 +127,16 @@ class LateralRaiseDetector(BaseExerciseDetector):
             stage=new_stage,
             repetitionCount=reps,
             repIncremented=rep_incremented,
-            formScore=100.0 if is_good_form else 0.0,
+            formScore=100.0 if is_good_form else 70.0,
             isCorrectForm=is_good_form,
             feedback=feedback,
             jointAngles=joint_angles,
+            aiState=ai_state,
+            sessionData=session_data,
             metrics={
                 "formStatus": "Good Form" if is_good_form else "Bad Form",
                 "shoulderAbductionAngle": round(active_angle, 1),
                 "romPercentage": rom_pct
             }
         )
+
