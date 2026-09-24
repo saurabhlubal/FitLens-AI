@@ -4,7 +4,10 @@ dist/
 
 # Large binaries (loaded dynamically via CDN)
 frontend/public/mediapipe/wasm/
-frontend/public/models/
+fitlens*
+id_rsa*
+*.pem
+*.key
 
 # Python
 __pycache__/

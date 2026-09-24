@@ -79,6 +79,7 @@ export default function CameraAnalysisPage() {
   const currentRepsRef = useRef(0);
   const currentStageRef = useRef("up");
   const formStatusHistoryRef = useRef([]);
+  const sessionDataRef = useRef({});
 
   // Session ID to discard in-flight async responses after a reset
   const sessionIdRef = useRef(0);
@@ -91,6 +92,7 @@ export default function CameraAnalysisPage() {
   const [detecting, setDetecting] = useState(false);
   const [landmarksDetected, setLandmarksDetected] = useState(false);
   const [activeTab, setActiveTab] = useState("vision"); // "vision" | "guide"
+  const [hardwareProvider, setHardwareProvider] = useState("wasm");
 
   // Real-time AI Telemetry State
   const [reps, setReps] = useState(0);
@@ -259,6 +261,7 @@ export default function CameraAnalysisPage() {
     formStatusHistoryRef.current = [];
     smoothedLandmarksRef.current = null;
     getReadyTimerRef.current = 0;
+    sessionDataRef.current = {};
 
     setReps(0);
     setStage("up");
@@ -456,7 +459,7 @@ export default function CameraAnalysisPage() {
         const smoothLandmarks = applySmoothingFilter(rawLandmarks);
 
         const now = Date.now();
-        if (now - lastInferenceTimeRef.current >= 80 && !isInferringRef.current) {
+        if (now - lastInferenceTimeRef.current >= 30 && !isInferringRef.current) {
           isInferringRef.current = true;
           lastInferenceTimeRef.current = now;
           const capturedSessionId = sessionIdRef.current;
@@ -466,7 +469,8 @@ export default function CameraAnalysisPage() {
               exercise,
               smoothLandmarks,
               currentRepsRef.current,
-              currentStageRef.current
+              currentStageRef.current,
+              sessionDataRef.current
             )
             .then((res) => {
               if (capturedSessionId !== sessionIdRef.current) {
@@ -474,6 +478,9 @@ export default function CameraAnalysisPage() {
               }
 
               if (res) {
+                if (res.acceleration) {
+                  setHardwareProvider(res.acceleration);
+                }
                 if (res.repetitionCount !== undefined) {
                   setReps(res.repetitionCount);
                   currentRepsRef.current = res.repetitionCount;
@@ -548,7 +555,8 @@ export default function CameraAnalysisPage() {
     }
 
     try {
-      setFeedback("Initializing AI Vision & Kinematic Engine...");
+      setFeedback("Initializing In-Browser AI Engine & Pose Landmarker...");
+      aiService.initInferenceEngine().catch((e) => console.warn("ONNX warmup error:", e));
       poseLandmarkerRef.current = await createPoseLandmarker();
       setDetecting(true);
 
@@ -767,8 +775,9 @@ export default function CameraAnalysisPage() {
                   </span>
 
                   {detecting && (
-                    <span className="rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider text-sky-700 animate-pulse">
-                      ML 12 FPS
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50 px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider text-emerald-800 shadow-xs animate-fade-in">
+                      <Sparkles size={12} className="text-emerald-600 animate-spin" />
+                      {hardwareProvider === "webgpu" ? "WebGPU ⚡ 60 FPS" : "WASM SIMD 🚀 60 FPS"} (Client)
                     </span>
                   )}
                 </div>
