@@ -25,17 +25,22 @@ class LateralRaiseDetector(BaseExerciseDetector):
         if session_data is None:
             session_data = {}
 
-        # 1. Extract Shoulder/Torso Keypoints
+        # 1. Extract Shoulder/Arm/Torso Keypoints
         l_hip = self.get_landmark(landmarks, 23)
         l_shoulder = self.get_landmark(landmarks, 11)
         l_elbow = self.get_landmark(landmarks, 13)
+        l_wrist = self.get_landmark(landmarks, 15)
 
         r_hip = self.get_landmark(landmarks, 24)
         r_shoulder = self.get_landmark(landmarks, 12)
         r_elbow = self.get_landmark(landmarks, 14)
+        r_wrist = self.get_landmark(landmarks, 16)
 
         left_arm_angle = self.calculate_angle(l_hip, l_shoulder, l_elbow)
         right_arm_angle = self.calculate_angle(r_hip, r_shoulder, r_elbow)
+
+        left_elbow_angle = self.calculate_angle(l_shoulder, l_elbow, l_wrist)
+        right_elbow_angle = self.calculate_angle(r_shoulder, r_elbow, r_wrist)
 
         active_angle = None
         if left_arm_angle is not None and right_arm_angle is not None:
@@ -60,7 +65,15 @@ class LateralRaiseDetector(BaseExerciseDetector):
         is_good_form = True
         form_fault_reason = None
 
-        if active_angle > 110:
+        active_elbow = min(filter(None, [left_elbow_angle, right_elbow_angle])) if (left_elbow_angle or right_elbow_angle) else 180.0
+        in_lateral_frame = True
+
+        # Check A: Lever arm must remain extended (not deeply curling or upright rowing)
+        if active_angle >= 45.0 and active_elbow < 110.0:
+            in_lateral_frame = False
+            is_good_form = False
+            form_fault_reason = "Keep arms extended with only a slight elbow bend for lateral raises."
+        elif active_angle > 115:
             is_good_form = False
             form_fault_reason = "Don't raise above shoulder height! Stop parallel to prevent impingement."
 
@@ -79,7 +92,10 @@ class LateralRaiseDetector(BaseExerciseDetector):
         feedback = "Good Form. Raise dumbbells up to shoulder level." if is_good_form else form_fault_reason
 
         ai_state = "ANALYZING"
-        if active_angle <= 35:
+        if not in_lateral_frame:
+            ai_state = "FORM_FEEDBACK"
+            session_data["inflection_reached"] = False
+        elif active_angle <= 35:
             new_stage = "down"
             if session_data.get("inflection_reached"):
                 reps += 1

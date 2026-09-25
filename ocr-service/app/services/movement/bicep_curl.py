@@ -96,10 +96,17 @@ class BicepCurlDetector(BaseExerciseDetector):
             is_good_form = False
             form_fault_reason = "Elbow raised too high! Anchor elbows at your ribs."
 
-        # Check B: Upper arm / Torso angle (Shoulder drift / swinging)
-        if active_shoulder_angle is not None and active_shoulder_angle > 45:
-            is_good_form = False
-            form_fault_reason = "Keep elbows pinned to your ribs. Avoid swinging."
+        # Check B: Upper arm / Torso angle (Shoulder drift / swinging vs Arm Raise)
+        if active_shoulder_angle is not None:
+            if active_shoulder_angle > 55:
+                # Gross arm raise: whole upper arm is swinging up towards shoulder level
+                in_bicep_frame = False
+                is_good_form = False
+                form_fault_reason = "Arm raise detected! Anchor your elbows near your torso to curl."
+            elif active_shoulder_angle > 35:
+                # Mild elbow drift / swing: valid curl movement, but form coaching feedback
+                is_good_form = False
+                form_fault_reason = "Keep elbows pinned to your ribs. Avoid swinging."
 
         # 3. State Machine & Full-Cycle Multi-Rep Counting (down -> up -> down = 1)
         # Extension (Down): Elbow Angle >= 140° (Natural full extension)

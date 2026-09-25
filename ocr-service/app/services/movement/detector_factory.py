@@ -58,7 +58,7 @@ class DetectorFactory:
 
     @classmethod
     def get_detector(cls, exercise_name: str) -> Optional[BaseExerciseDetector]:
-        normalized = exercise_name.strip().lower()
+        normalized = exercise_name.strip().lower().replace("_", " ")
         if normalized in cls._registry:
             return cls._registry[normalized]
         # Partial match fallback

@@ -98,13 +98,26 @@ class SquatDetector(BaseExerciseDetector):
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
         elif active_knee <= 100:
-            new_stage = "down"
-            session_data["inflection_reached"] = True
-            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
-            if is_good_form:
-                feedback = "Great depth reached (Good Form)! Drive through heels to stand."
-            else:
+            # Check bilateral knee symmetry at depth (prevents single-leg flamingo curls / lunges)
+            knee_diff = abs(left_knee_angle - right_knee_angle) if (left_knee_angle and right_knee_angle) else 0.0
+            if knee_diff > 35.0:
+                new_stage = "down"
+                session_data["inflection_reached"] = False
+                is_good_form = False
+                form_fault_reason = "Squat requires bending both knees symmetrically."
+                ai_state = "FORM_FEEDBACK"
                 feedback = f"Bad Form: {form_fault_reason}"
+            else:
+                new_stage = "down"
+                session_data["inflection_reached"] = True
+                if knee_diff > 20.0:
+                    is_good_form = False
+                    form_fault_reason = "Drive evenly through both legs."
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    feedback = "Great depth reached (Good Form)! Drive through heels to stand."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
         else:
             # Transit zone
             ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"

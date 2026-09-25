@@ -1,3 +1,4 @@
+import math
 from typing import List, Optional, Dict, Any
 from app.models.movement import LandmarkPoint, MovementAnalysisResponse, JointAngles
 from app.services.movement.base_detector import BaseExerciseDetector
@@ -67,9 +68,22 @@ class PushUpDetector(BaseExerciseDetector):
         # 2. Structural Frame & Plank Form Validation
         is_good_form = True
         form_fault_reason = None
+        in_pushup_frame = True
+
+        # Check A: Horizontal Prone Body Orientation (Standing arms cannot count as push-ups)
+        sh = l_shoulder or r_shoulder
+        hip = l_hip or r_hip
+        if sh and hip:
+            dx = abs(sh.x - hip.x)
+            dy = abs(sh.y - hip.y)
+            torso_horiz_angle = (math.atan2(dy, max(0.001, dx))) * 180.0 / math.pi
+            if torso_horiz_angle > 40.0:
+                in_pushup_frame = False
+                is_good_form = False
+                form_fault_reason = "Push-ups require a horizontal plank position on the floor, not standing upright."
 
         body_angle = left_body_angle or right_body_angle
-        if body_angle is not None:
+        if body_angle is not None and in_pushup_frame:
             if body_angle < 145:
                 is_good_form = False
                 form_fault_reason = "Hips sagging! Tighten core and glutes to align spine."
@@ -86,7 +100,10 @@ class PushUpDetector(BaseExerciseDetector):
         feedback = "Good Form. Solid push-up plank." if is_good_form else form_fault_reason
         ai_state = "ANALYZING"
 
-        if active_elbow > 150:
+        if not in_pushup_frame:
+            ai_state = "FORM_FEEDBACK"
+            session_data["inflection_reached"] = False
+        elif active_elbow > 150:
             new_stage = "up"
             if session_data.get("inflection_reached"):
                 reps += 1

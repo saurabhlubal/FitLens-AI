@@ -77,15 +77,28 @@ class ShoulderPressDetector(BaseExerciseDetector):
         feedback = "Good Form. Press overhead with control." if is_good_form else form_fault_reason
         ai_state = "ANALYZING"
 
+        # Overhead Trajectory Identity Check: Wrists must reach above shoulders for lockout
+        sh_y = min(l_shoulder.y if l_shoulder else 1.0, r_shoulder.y if r_shoulder else 1.0)
+        wri_y = min(l_wrist.y if l_wrist else 1.0, r_wrist.y if r_wrist else 1.0)
+        is_overhead = wri_y < sh_y
+
+        # Rack height: wrists should be elevated above hips, not hanging down at waist
+        hip_y = min(l_hip.y if l_hip else 1.0, r_hip.y if r_hip else 1.0)
+        is_rack_height = (wri_y < hip_y - 0.10) if (l_hip or r_hip) else True
+
         if active_elbow >= 155:
-            new_stage = "up"
-            session_data["inflection_reached"] = True
-            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
-            if is_good_form:
-                feedback = "Good lockout overhead! Lower weights under control to shoulders."
+            if is_overhead:
+                new_stage = "up"
+                session_data["inflection_reached"] = True
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    feedback = "Good lockout overhead! Lower weights under control to shoulders."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
             else:
-                feedback = f"Bad Form: {form_fault_reason}"
-        elif active_elbow <= 90:
+                ai_state = "FORM_FEEDBACK"
+                feedback = "Press dumbbells all the way overhead for shoulder press."
+        elif active_elbow <= 90 and is_rack_height:
             new_stage = "down"
             if session_data.get("inflection_reached"):
                 reps += 1

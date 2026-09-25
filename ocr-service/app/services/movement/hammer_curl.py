@@ -86,9 +86,17 @@ class HammerCurlDetector(BaseExerciseDetector):
             is_good_form = False
             form_fault_reason = "Elbow raised too high! Keep elbows pinned at your ribs."
 
-        if active_shoulder_angle is not None and active_shoulder_angle > 45:
-            is_good_form = False
-            form_fault_reason = "Avoid swinging upper arms. Pin elbows tight."
+        # Biomechanical Note: MediaPipe Pose (33 points) does not provide reliable hand palm normal vectors
+        # or knuckle articulation when holding dumbbells. Hammer Curl therefore shares the robust arm-hinge
+        # identity validation of Bicep Curl without relying on noisy pseudo-grip calculations.
+        if active_shoulder_angle is not None:
+            if active_shoulder_angle > 55:
+                in_hammer_frame = False
+                is_good_form = False
+                form_fault_reason = "Arm raise detected! Anchor your elbows near your torso to curl."
+            elif active_shoulder_angle > 35:
+                is_good_form = False
+                form_fault_reason = "Avoid swinging upper arms. Pin elbows tight."
 
         new_stage = current_stage
         rep_incremented = False

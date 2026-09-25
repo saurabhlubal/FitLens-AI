@@ -95,13 +95,23 @@ class JumpingJackDetector(BaseExerciseDetector):
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
         elif active_arm_angle >= 135:
-            new_stage = "up"
-            session_data["inflection_reached"] = True
-            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
-            if is_good_form:
-                feedback = "Good Form. Arms overhead! Bounce back to center."
-            else:
+            # Coordinated Leg Abduction Check: Feet must be wide when arms reach overhead
+            ankle_dist = abs(l_ankle.x - r_ankle.x) if (l_ankle and r_ankle) else 0.0
+            if ankle_dist < 0.20:
+                new_stage = "up"
+                session_data["inflection_reached"] = False
+                is_good_form = False
+                form_fault_reason = "Jump your feet wide as your arms sweep overhead!"
+                ai_state = "FORM_FEEDBACK"
                 feedback = f"Bad Form: {form_fault_reason}"
+            else:
+                new_stage = "up"
+                session_data["inflection_reached"] = True
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    feedback = "Good Form. Arms overhead! Bounce back to center."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
         else:
             ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:

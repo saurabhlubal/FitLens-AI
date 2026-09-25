@@ -91,13 +91,28 @@ class LungeDetector(BaseExerciseDetector):
                 else:
                     feedback = f"Bad Form: {form_fault_reason}"
         elif lead_knee_angle <= 105:
+            # Check split stance separation (prevents parallel squats from counting as lunges)
+            ankle_x_sep = abs(l_ankle.x - r_ankle.x) if (l_ankle and r_ankle) else 0.0
+            ankle_z_sep = abs((l_ankle.z or 0.0) - (r_ankle.z or 0.0)) if (l_ankle and r_ankle) else 0.0
+            max_sep = max(ankle_x_sep, ankle_z_sep)
+            is_squat_stance = False
+            if left_knee_angle and right_knee_angle and abs(left_knee_angle - right_knee_angle) < 20.0 and max_sep < 0.08:
+                is_squat_stance = True
+
             new_stage = "down"
-            session_data["inflection_reached"] = True
-            ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
-            if is_good_form:
-                feedback = "Full lunge depth reached (Good Form)! Drive through front heel."
-            else:
+            if is_squat_stance:
+                session_data["inflection_reached"] = False
+                is_good_form = False
+                form_fault_reason = "Lunges require a staggered split stance (one foot forward, one back)."
+                ai_state = "FORM_FEEDBACK"
                 feedback = f"Bad Form: {form_fault_reason}"
+            else:
+                session_data["inflection_reached"] = True
+                ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
+                if is_good_form:
+                    feedback = "Full lunge depth reached (Good Form)! Drive through front heel."
+                else:
+                    feedback = f"Bad Form: {form_fault_reason}"
         else:
             ai_state = "ANALYZING" if is_good_form else "FORM_FEEDBACK"
             if is_good_form:

@@ -5,6 +5,7 @@ from app.services.movement.detector_factory import DetectorFactory
 from app.services.movement.body_part_classifier import BodyPartSegmenter
 from app.services.movement.pose_quality import PoseQualityValidator
 from app.services.movement.classifier import ExerciseClassifier
+from app.services.movement.identity_validator import ExerciseIdentityValidator
 
 router = APIRouter(prefix="/api/ai/movement", tags=["Movement & Repetition Detection"])
 
@@ -67,7 +68,30 @@ async def analyze_movement_landmarks(payload: MovementAnalysisRequest):
             timestamp=time.time()
         )
 
-    # 3. Detector Retrieval and Execution (Full-Cycle Repetition State Machine)
+    # 3. Exercise-Specific Biomechanical Identity Validation
+    identity_res = ExerciseIdentityValidator().validate(
+        expected_exercise=payload.exerciseName,
+        landmarks=payload.landmarks,
+        session_data=session_data
+    )
+    if not identity_res.is_valid:
+        return MovementAnalysisResponse(
+            success=True,
+            exerciseName=payload.exerciseName,
+            stage=payload.currentStage or "up",
+            repetitionCount=payload.currentReps or 0,
+            repIncremented=False,
+            formScore=None,  # Null formScore for identity mismatch (not 0.0)
+            isCorrectForm=True,
+            feedback=identity_res.feedback,
+            aiState="EXERCISE_MISMATCH",
+            detectedExercise=identity_res.detected_movement or "Unexpected Movement",
+            poseQuality=quality_res.details,
+            sessionData=session_data,  # Session state preserved
+            timestamp=time.time()
+        )
+
+    # 4. Detector Retrieval and Execution (Full-Cycle Repetition State Machine)
     detector = DetectorFactory.get_detector(payload.exerciseName)
     if not detector:
         raise HTTPException(
