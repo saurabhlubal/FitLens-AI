@@ -102,67 +102,18 @@ export default function AppRoutes() {
 
 
       {/* =========================
-          CAMERA / AI ANALYSIS
+          CAMERA / AI ANALYSIS (Direct Access / In-Browser)
       ========================= */}
 
-      <Route
-        path="/camera"
-        element={
-          <ProtectedRoute>
-            <CameraAnalysisPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/ai-analysis/:exerciseId"
-        element={
-          <ProtectedRoute>
-            <CameraAnalysisPage />
-          </ProtectedRoute>
-        }
-      />
-
+      <Route path="/camera" element={<CameraAnalysisPage />} />
+      <Route path="/ai-analysis/:exerciseId" element={<CameraAnalysisPage />} />
 
       {/* =========================
-          TRAINING
+          TRAINING & POSE TRAINER (Direct Access / In-Browser)
       ========================= */}
 
-      <Route
-        path="/training"
-        element={
-          <ProtectedRoute>
-            <TrainingPage />
-          </ProtectedRoute>
-        }
-      />
-
-
-      {/* =========================
-          OCR Scan
-      ========================= */}
-
-      <Route
-        path="/scan"
-        element={
-          <ProtectedRoute>
-            <ScanPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =========================
-          Pose Trainer
-      ========================= */}
-
-      <Route
-        path="/train"
-        element={
-          <ProtectedRoute>
-            <TrainPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/training" element={<TrainingPage />} />
+      <Route path="/train" element={<TrainPage />} />
 
       {/* =========================
           404

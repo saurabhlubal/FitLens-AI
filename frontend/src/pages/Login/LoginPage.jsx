@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleGuestDemo = () => {
+    const guestUser = {
+      id: 999,
+      name: "Guest Athlete",
+      email: email.trim() || "guest@fitlens.ai",
+    };
+    login(guestUser, "mock-demo-jwt-token");
+    navigate("/camera");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -55,7 +65,8 @@ export default function LoginPage() {
       navigate("/dashboard");
 
     } catch (error) {
-      setError(error.message || "Login failed");
+      console.warn("Backend login failed:", error);
+      setError("Backend server is offline or invalid credentials. You can click 'Instant Demo Mode' below to test the AI camera directly!");
     } finally {
       setLoading(false);
     }
@@ -246,13 +257,23 @@ export default function LoginPage() {
             </form>
 
             {/* Divider */}
-            <div className="my-6 flex items-center">
+            <div className="my-5 flex items-center">
               <div className="h-px flex-1 bg-slate-200" />
               <span className="px-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                OR CONTINUE WITH
+                OR TEST IMMEDIATELY
               </span>
               <div className="h-px flex-1 bg-slate-200" />
             </div>
+
+            {/* Instant Demo Button */}
+            <button
+              type="button"
+              onClick={handleGuestDemo}
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-100 py-3 text-xs font-bold uppercase tracking-wider text-slate-800 transition hover:bg-slate-200 shadow-xs"
+            >
+              <Sparkles size={14} className="text-lime-600" />
+              ⚡ Instant Demo Mode (No Server Needed)
+            </button>
 
             {/* Google continue */}
             <button

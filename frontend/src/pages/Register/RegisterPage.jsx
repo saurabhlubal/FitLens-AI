@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 import AuthLayout from "../../components/auth/AuthLayout";
 import AuthCard from "../../components/auth/AuthCard";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 import Divider from "../../components/auth/Divider";
-import SocialButton from "../../components/auth/SocialButton";
 
 import { useAuthContext } from "../../context/AuthContext";
 import authService from "../../services/authService";
@@ -23,6 +22,16 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleGuestDemo = () => {
+    const guestUser = {
+      id: 999,
+      name: name.trim() || "Guest Athlete",
+      email: email.trim() || "guest@fitlens.ai",
+    };
+    login(guestUser, "mock-demo-jwt-token");
+    navigate("/camera");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,14 +81,24 @@ export default function RegisterPage() {
       // Go to dashboard
       navigate("/dashboard");
     } catch (error) {
-      console.error("Registration error:", error);
+      console.warn("Backend registration unavailable:", error);
 
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Registration failed. Please try again.";
+      const isNetworkError =
+        error.code === "ERR_NETWORK" ||
+        error.message?.includes("Network Error") ||
+        !error.response;
 
-      setError(message);
+      if (isNetworkError) {
+        setError(
+          "Backend server is offline. You can test the In-Browser AI Camera directly via Demo Mode below!"
+        );
+      } else {
+        const message =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Registration failed. Please try again or use Demo Mode.";
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -92,7 +111,6 @@ export default function RegisterPage() {
         subtitle="Start your AI fitness journey today."
       >
         <form onSubmit={handleSubmit}>
-
           <AuthInput
             label="Full Name"
             placeholder="John Doe"
@@ -123,9 +141,17 @@ export default function RegisterPage() {
           />
 
           {error && (
-            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-600">
-              {error}
-            </p>
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-900">
+              <p>{error}</p>
+              <button
+                type="button"
+                onClick={handleGuestDemo}
+                className="mt-2 inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-900 underline underline-offset-4 hover:text-lime-700"
+              >
+                <Sparkles size={13} className="text-lime-600" />
+                Proceed to Camera in Demo Mode <ArrowRight size={13} />
+              </button>
+            </div>
           )}
 
           <button
@@ -135,12 +161,18 @@ export default function RegisterPage() {
           >
             {loading ? "Creating Account..." : "Create Account"}
           </button>
-
         </form>
 
-        <Divider text="OR CONTINUE WITH" />
+        <Divider text="OR TEST IMMEDIATELY" />
 
-        <SocialButton text="Continue with Google" />
+        <button
+          type="button"
+          onClick={handleGuestDemo}
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-100 py-3 text-xs font-bold uppercase tracking-wider text-slate-800 transition hover:bg-slate-200 shadow-xs"
+        >
+          <Sparkles size={14} className="text-lime-600" />
+          ⚡ Instant Demo Mode (No Server Needed)
+        </button>
 
         <p className="mt-6 text-center text-xs text-slate-500">
           Already have an account?{" "}
@@ -151,9 +183,7 @@ export default function RegisterPage() {
             Login
           </Link>
         </p>
-
       </AuthCard>
     </AuthLayout>
   );
 }
-

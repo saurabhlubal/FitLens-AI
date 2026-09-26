@@ -63,7 +63,7 @@ class OnnxInferenceService {
 
     this.initPromise = (async () => {
       this.isLoading = true;
-      const modelPath = "/models/body_part_classifier.onnx";
+      const modelPath = "/models/fitlens.onnx";
 
       // Configure WASM worker paths
       ort.env.wasm.numThreads = Math.min(4, typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 2 : 2);
@@ -77,10 +77,18 @@ class OnnxInferenceService {
       for (const ep of providersToTry) {
         try {
           console.log(`[FitLens AI] Attempting ONNX session with Execution Provider: '${ep}'...`);
-          const session = await ort.InferenceSession.create(modelPath, {
-            executionProviders: [ep],
-            graphOptimizationLevel: "all",
-          });
+          let session;
+          try {
+            session = await ort.InferenceSession.create(modelPath, {
+              executionProviders: [ep],
+              graphOptimizationLevel: "all",
+            });
+          } catch {
+            session = await ort.InferenceSession.create("/models/body_part_classifier.onnx", {
+              executionProviders: [ep],
+              graphOptimizationLevel: "all",
+            });
+          }
           this.session = session;
           this.activeProvider = ep;
           console.log(`[FitLens AI] ✅ ONNX Inference Engine Ready on '${ep.toUpperCase()}'!`);
