@@ -13,15 +13,8 @@ export async function createPoseLandmarker() {
   try {
     console.log("Loading MediaPipe WASM runtime from CDN...");
 
-    // Fast global edge CDN with local fallback
-    let vision;
-    try {
-      vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-      );
-    } catch {
-      vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
-    }
+    // Use reliable local public WASM assets
+    const vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
 
     console.log("MediaPipe WASM initialized.");
 
