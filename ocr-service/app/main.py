@@ -24,6 +24,7 @@ app.add_middleware(
 # Register AI Movement Routers
 app.include_router(movement_router)
 app.include_router(ocr.router)
+app.include_router(ocr.router, prefix="/api")
 
 @app.get("/health")
 async def health():
