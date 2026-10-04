@@ -32,4 +32,6 @@ public class WorkoutExercise {
 
     @Column(length = 2000)
     private String aiFeedback;
+
+    private Integer orderIndex;
 }

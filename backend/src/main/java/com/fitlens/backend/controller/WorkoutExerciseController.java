@@ -114,4 +114,26 @@ public class WorkoutExerciseController {
 
         return ResponseEntity.noContent().build();
     }
+
+    // ============================================================
+    // REORDER EXERCISES
+    // ============================================================
+
+    @PutMapping("/reorder")
+    public ResponseEntity<List<WorkoutExerciseResponse>> reorderExercises(
+            @PathVariable Long workoutId,
+            @RequestBody List<Long> orderedIds,
+            Authentication authentication
+    ) {
+        User user = (User) authentication.getPrincipal();
+
+        List<WorkoutExerciseResponse> response =
+                workoutExerciseService.reorderExercises(
+                        workoutId,
+                        orderedIds,
+                        user
+                );
+
+        return ResponseEntity.ok(response);
+    }
 }

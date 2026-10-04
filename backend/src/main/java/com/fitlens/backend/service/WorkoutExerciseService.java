@@ -50,11 +50,15 @@ public class WorkoutExerciseService {
                         new RuntimeException("Exercise not found")
                 );
 
+        List<WorkoutExercise> existing = workoutExerciseRepository.findByWorkout(workout);
+        int nextOrderIndex = request.getOrderIndex() != null ? request.getOrderIndex() : existing.size();
+
         WorkoutExercise workoutExercise = WorkoutExercise.builder()
                 .workout(workout)
                 .exercise(exercise)
                 .sets(request.getSets())
                 .reps(request.getReps())
+                .orderIndex(nextOrderIndex)
                 .build();
 
         WorkoutExercise saved =
@@ -79,6 +83,11 @@ public class WorkoutExerciseService {
 
         return workoutExerciseRepository.findByWorkout(workout)
                 .stream()
+                .sorted((a, b) -> {
+                    int orderA = a.getOrderIndex() != null ? a.getOrderIndex() : (a.getId() != null ? a.getId().intValue() : 0);
+                    int orderB = b.getOrderIndex() != null ? b.getOrderIndex() : (b.getId() != null ? b.getId().intValue() : 0);
+                    return Integer.compare(orderA, orderB);
+                })
                 .map(this::toResponse)
                 .toList();
     }
@@ -103,7 +112,7 @@ public class WorkoutExerciseService {
                 workoutExerciseRepository.findById(workoutExerciseId)
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Workout exercise not found"
+                                         "Workout exercise not found"
                                 )
                         );
 
@@ -111,13 +120,51 @@ public class WorkoutExerciseService {
             throw new RuntimeException("Workout exercise mismatch");
         }
 
-        workoutExercise.setSets(request.getSets());
-        workoutExercise.setReps(request.getReps());
+        if (request.getSets() != null) {
+            workoutExercise.setSets(request.getSets());
+        }
+        if (request.getReps() != null) {
+            workoutExercise.setReps(request.getReps());
+        }
+        if (request.getOrderIndex() != null) {
+            workoutExercise.setOrderIndex(request.getOrderIndex());
+        }
 
         WorkoutExercise updated =
                 workoutExerciseRepository.save(workoutExercise);
 
         return toResponse(updated);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public List<WorkoutExerciseResponse> reorderExercises(
+            Long workoutId,
+            List<Long> orderedIds,
+            User user
+    ) {
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() ->
+                        new RuntimeException("Workout not found")
+                );
+
+        if (!workout.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        List<WorkoutExercise> exercises = workoutExerciseRepository.findByWorkout(workout);
+        java.util.Map<Long, WorkoutExercise> map = exercises.stream()
+                .collect(java.util.stream.Collectors.toMap(WorkoutExercise::getId, java.util.function.Function.identity()));
+
+        int order = 0;
+        for (Long id : orderedIds) {
+            WorkoutExercise we = map.get(id);
+            if (we != null) {
+                we.setOrderIndex(order++);
+                workoutExerciseRepository.save(we);
+            }
+        }
+
+        return getWorkoutExercises(workoutId, user);
     }
 
     public void deleteWorkoutExercise(
@@ -163,7 +210,8 @@ public class WorkoutExerciseService {
                 workoutExercise.getSets(),
                 workoutExercise.getReps(),
                 workoutExercise.getFormScore(),
-                workoutExercise.getAiFeedback()
+                workoutExercise.getAiFeedback(),
+                workoutExercise.getOrderIndex()
         );
     }
 }

@@ -17,6 +17,11 @@ import {
   Target,
   ChevronRight,
   Flame,
+  Lock,
+  Trophy,
+  Check,
+  FastForward,
+  Play,
 } from "lucide-react";
 import { createPoseLandmarker } from "../../utils/pose/poseLandmarker";
 import AuthenticatedNavbar from "../../components/layout/AuthenticatedNavbar";
@@ -58,9 +63,11 @@ const SKELETON_CONNECTIONS = [
 ];
 
 export default function CameraAnalysisPage() {
-  const { exerciseId } = useParams();
+  const { workoutId, exerciseId } = useParams();
   const navigate = useNavigate();
   const { token } = useAuthContext();
+
+  const isWorkoutMode = Boolean(workoutId || exerciseId);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -78,6 +85,8 @@ export default function CameraAnalysisPage() {
   const currentStageRef = useRef("up");
   const formStatusHistoryRef = useRef([]);
   const sessionDataRef = useRef({});
+  const isTransitioningRef = useRef(false);
+  const formScoresRef = useRef([]);
 
   // Session ID to discard in-flight async responses after a reset
   const sessionIdRef = useRef(0);
@@ -94,16 +103,27 @@ export default function CameraAnalysisPage() {
   const [aiState, setAiState] = useState("READY");
   const [detectedExercise, setDetectedExercise] = useState(null);
   const [isCorrectForm, setIsCorrectForm] = useState(true);
-  const [formStatus, setFormStatus] = useState("Good Form"); // "Good Form" | "Bad Form"
+  const [formStatus, setFormStatus] = useState("Good Form");
   const [feedback, setFeedback] = useState("Start camera to begin AI movement detection.");
   const [jointAngles, setJointAngles] = useState({});
   const [romPercentage, setRomPercentage] = useState(0);
 
+  // Active Workout Protocol State
+  const [workout, setWorkout] = useState(null);
+  const [workoutExercises, setWorkoutExercises] = useState([]);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentSet, setCurrentSet] = useState(1);
+  const [restCountdown, setRestCountdown] = useState(null);
+  const [interstitialState, setInterstitialState] = useState(null); // null | 'set_complete' | 'exercise_complete'
+  const [isWorkoutCompleted, setIsWorkoutCompleted] = useState(false);
+  const [completedSummary, setCompletedSummary] = useState([]);
 
-  // Workout Session Context (if navigated from workouts)
-  const [workoutContext, setWorkoutContext] = useState(null);
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const currentWorkoutExercise = workoutExercises[currentExerciseIndex] || null;
+  const targetSets = currentWorkoutExercise ? currentWorkoutExercise.sets : 3;
+  const targetReps = currentWorkoutExercise ? currentWorkoutExercise.reps : 10;
 
   const activeGuide = EXERCISE_GUIDES[exercise] || EXERCISE_GUIDES["Bicep Curl"];
 
@@ -115,29 +135,57 @@ export default function CameraAnalysisPage() {
     currentStageRef.current = stage;
   }, [stage]);
 
-  // Load workout exercise details if exerciseId param present
+  // ============================================================
+  // LOAD WORKOUT DATA (Locked Workout Sequence)
+  // ============================================================
   useEffect(() => {
-    if (!exerciseId || !token) return;
+    if (!token || !isWorkoutMode) return;
 
-    const fetchWorkoutContext = async () => {
+    const loadWorkoutData = async () => {
       try {
-        const workoutsRes = await fetch("http://localhost:8080/api/workouts", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!workoutsRes.ok) return;
-        const workouts = await workoutsRes.json();
+        if (workoutId) {
+          const [wRes, exRes] = await Promise.all([
+            fetch(`http://localhost:8080/api/workouts/${workoutId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`http://localhost:8080/api/workouts/${workoutId}/exercises`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
-        for (const w of workouts) {
-          const exRes = await fetch(`http://localhost:8080/api/workouts/${w.id}/exercises`, {
+          if (wRes.ok && exRes.ok) {
+            const wData = await wRes.json();
+            const exData = await exRes.json();
+            setWorkout(wData);
+            setWorkoutExercises(exData);
+
+            if (exData.length > 0) {
+              setCurrentExerciseIndex(0);
+              setExercise(exData[0].exerciseName);
+            }
+          }
+        } else if (exerciseId) {
+          const workoutsRes = await fetch("http://localhost:8080/api/workouts", {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (exRes.ok) {
-            const exList = await exRes.json();
-            const match = exList.find((e) => String(e.id) === String(exerciseId));
-            if (match) {
-              setWorkoutContext({ workoutId: w.id, exercise: match });
-              setExercise(match.exerciseName);
-              break;
+
+          if (workoutsRes.ok) {
+            const allWorkouts = await workoutsRes.json();
+            for (const w of allWorkouts) {
+              const exRes = await fetch(`http://localhost:8080/api/workouts/${w.id}/exercises`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (exRes.ok) {
+                const exList = await exRes.json();
+                const matchIndex = exList.findIndex((e) => String(e.id) === String(exerciseId));
+                if (matchIndex !== -1) {
+                  setWorkout(w);
+                  setWorkoutExercises(exList);
+                  setCurrentExerciseIndex(matchIndex);
+                  setExercise(exList[matchIndex].exerciseName);
+                  break;
+                }
+              }
             }
           }
         }
@@ -146,8 +194,8 @@ export default function CameraAnalysisPage() {
       }
     };
 
-    fetchWorkoutContext();
-  }, [exerciseId, token]);
+    loadWorkoutData();
+  }, [workoutId, exerciseId, token, isWorkoutMode]);
 
   // =========================
   // START CAMERA
@@ -223,6 +271,7 @@ export default function CameraAnalysisPage() {
     formStatusHistoryRef.current = [];
     smoothedLandmarksRef.current = null;
     sessionDataRef.current = {};
+    formScoresRef.current = [];
 
     setReps(0);
     setStage("up");
@@ -378,6 +427,136 @@ export default function CameraAnalysisPage() {
     });
   };
 
+  // ============================================================
+  // SET & EXERCISE AUTO-PROGRESSION ENGINE
+  // ============================================================
+  const handleSetOrExerciseCompletion = useCallback(async (achievedReps) => {
+    if (isTransitioningRef.current || !currentWorkoutExercise) return;
+    isTransitioningRef.current = true;
+
+    const currentEx = currentWorkoutExercise;
+    const finalSets = currentEx.sets || 3;
+    const currentScores = formScoresRef.current;
+    const avgScore =
+      currentScores.length > 0
+        ? Math.round(currentScores.reduce((a, b) => a + b, 0) / currentScores.length)
+        : 100;
+
+    // Check if more sets remain for this exercise
+    if (currentSet < finalSets) {
+      setInterstitialState("set_complete");
+      setFeedback(`Set ${currentSet} of ${finalSets} completed! Rest up before the next set.`);
+
+      // Rest countdown: 5 seconds
+      let secondsLeft = 5;
+      setRestCountdown(secondsLeft);
+      const timer = setInterval(() => {
+        secondsLeft -= 1;
+        if (secondsLeft > 0) {
+          setRestCountdown(secondsLeft);
+        } else {
+          clearInterval(timer);
+          startNextSet();
+        }
+      }, 1000);
+    } else {
+      // All sets completed for this exercise!
+      setInterstitialState("exercise_complete");
+
+      // Auto-save this exercise analysis to backend
+      try {
+        await aiService.saveWorkoutExerciseAnalysis(
+          workout ? workout.id : workoutId,
+          currentEx.id,
+          {
+            reps: achievedReps,
+            formScore: avgScore,
+            aiFeedback: `Completed ${finalSets} sets of ${achievedReps} reps with ${avgScore}% form accuracy.`,
+          }
+        );
+      } catch (err) {
+        console.error("Auto-save exercise error:", err);
+      }
+
+      setCompletedSummary((prev) => [
+        ...prev,
+        {
+          exerciseName: currentEx.exerciseName,
+          sets: finalSets,
+          reps: achievedReps,
+          formScore: avgScore,
+          aiFeedback: `Completed ${finalSets} sets × ${achievedReps} reps in Good Form.`,
+        },
+      ]);
+
+      // Check if more exercises remain in the workout sequence
+      const nextIndex = currentExerciseIndex + 1;
+      if (nextIndex < workoutExercises.length) {
+        // More exercises in sequence: 5-second transition
+        let secondsLeft = 5;
+        setRestCountdown(secondsLeft);
+        const timer = setInterval(() => {
+          secondsLeft -= 1;
+          if (secondsLeft > 0) {
+            setRestCountdown(secondsLeft);
+          } else {
+            clearInterval(timer);
+            advanceToNextExercise(nextIndex);
+          }
+        }, 1000);
+      } else {
+        // WORKOUT FINISHED!
+        setIsWorkoutCompleted(true);
+        setInterstitialState(null);
+        isTransitioningRef.current = false;
+        stopDetection();
+      }
+    }
+  }, [currentWorkoutExercise, currentSet, currentExerciseIndex, workoutExercises, workout, workoutId]);
+
+  const startNextSet = () => {
+    setRestCountdown(null);
+    setInterstitialState(null);
+    setCurrentSet((prev) => prev + 1);
+
+    // Reset detector state for next set
+    sessionIdRef.current += 1;
+    currentRepsRef.current = 0;
+    currentStageRef.current = "up";
+    sessionDataRef.current = {};
+    formScoresRef.current = [];
+
+    setReps(0);
+    setStage("up");
+    setRomPercentage(0);
+    isTransitioningRef.current = false;
+    setFeedback(`Set ${currentSet + 1} started! Step into frame and perform your repetitions.`);
+  };
+
+  const advanceToNextExercise = (nextIndex) => {
+    setRestCountdown(null);
+    setInterstitialState(null);
+    setCurrentExerciseIndex(nextIndex);
+
+    const nextExercise = workoutExercises[nextIndex];
+    setExercise(nextExercise.exerciseName);
+    setCurrentSet(1);
+
+    // Reset detector state for next exercise
+    sessionIdRef.current += 1;
+    currentRepsRef.current = 0;
+    currentStageRef.current = "up";
+    sessionDataRef.current = {};
+    smoothedLandmarksRef.current = null;
+    formScoresRef.current = [];
+
+    setReps(0);
+    setStage("up");
+    setRomPercentage(0);
+    isTransitioningRef.current = false;
+    setFeedback(`Next exercise: ${nextExercise.exerciseName}! Align your body to begin.`);
+  };
+
   // =========================
   // REAL-TIME POSE DETECTION LOOP
   // =========================
@@ -401,7 +580,7 @@ export default function CameraAnalysisPage() {
         const smoothLandmarks = applySmoothingFilter(rawLandmarks);
 
         const now = Date.now();
-        if (now - lastInferenceTimeRef.current >= 80 && !isInferringRef.current) {
+        if (now - lastInferenceTimeRef.current >= 80 && !isInferringRef.current && !isTransitioningRef.current) {
           isInferringRef.current = true;
           lastInferenceTimeRef.current = now;
           const capturedSessionId = sessionIdRef.current;
@@ -432,6 +611,14 @@ export default function CameraAnalysisPage() {
                 if (res.repetitionCount !== undefined) {
                   setReps(res.repetitionCount);
                   currentRepsRef.current = res.repetitionCount;
+
+                  // Check if repetition target reached in workout mode
+                  if (isWorkoutMode && currentWorkoutExercise) {
+                    const reqReps = currentWorkoutExercise.reps || 10;
+                    if (res.repetitionCount >= reqReps && !isTransitioningRef.current) {
+                      handleSetOrExerciseCompletion(res.repetitionCount);
+                    }
+                  }
                 }
                 if (res.stage) {
                   setStage(res.stage);
@@ -442,6 +629,7 @@ export default function CameraAnalysisPage() {
                   const status = res.isCorrectForm ? "Good Form" : "Bad Form";
                   setFormStatus(status);
                   formStatusHistoryRef.current.push(status);
+                  formScoresRef.current.push(res.formScore);
                 }
                 if (res.feedback) {
                   setFeedback(res.feedback);
@@ -452,8 +640,11 @@ export default function CameraAnalysisPage() {
                 if (res.metrics?.romPercentage !== undefined) {
                   setRomPercentage(res.metrics.romPercentage);
                 }
-                
-                const inFrame = res.metrics?.inBicepFrame ?? res.metrics?.inHammerFrame ?? (res.aiState !== "POSITION_ADJUSTMENT");
+
+                const inFrame =
+                  res.metrics?.inBicepFrame ??
+                  res.metrics?.inHammerFrame ??
+                  res.aiState !== "POSITION_ADJUSTMENT";
                 drawLandmarks(smoothLandmarks, res.isCorrectForm, inFrame);
               }
             })
@@ -495,7 +686,7 @@ export default function CameraAnalysisPage() {
       setFeedback("Initializing AI Vision & Kinematic Engine...");
       poseLandmarkerRef.current = await createPoseLandmarker();
       setDetecting(true);
-      setFeedback("AI Vision active! Step back so your shoulders and arms are visible.");
+      setFeedback(`AI Vision active! Step back so your body is visible for ${exercise}.`);
 
       if (!animationRef.current) {
         animationRef.current = requestAnimationFrame(detectPose);
@@ -529,19 +720,24 @@ export default function CameraAnalysisPage() {
   };
 
   // =========================
-  // SAVE FORM ANALYSIS TO WORKOUT
+  // MANUAL SAVE TO WORKOUT
   // =========================
   const handleSaveToWorkout = async () => {
-    if (!workoutContext) return;
+    if (!currentWorkoutExercise) return;
 
     try {
       setSavingFeedback(true);
+      const avgScore =
+        formScoresRef.current.length > 0
+          ? Math.round(formScoresRef.current.reduce((a, b) => a + b, 0) / formScoresRef.current.length)
+          : 100;
+
       await aiService.saveWorkoutExerciseAnalysis(
-        workoutContext.workoutId,
-        workoutContext.exercise.id,
+        workout ? workout.id : workoutId,
+        currentWorkoutExercise.id,
         {
-          reps: reps > 0 ? reps : workoutContext.exercise.reps,
-          formScore: isCorrectForm ? 100 : 0,
+          reps: reps > 0 ? reps : currentWorkoutExercise.reps,
+          formScore: avgScore,
           aiFeedback: feedback,
         }
       );
@@ -580,26 +776,37 @@ export default function CameraAnalysisPage() {
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <div className="flex items-center gap-3">
-              {workoutContext && (
+              {workout && (
                 <button
-                  onClick={() => navigate(`/workouts/${workoutContext.workoutId}`)}
+                  onClick={() => navigate(`/workouts/${workout.id}`)}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950"
                 >
                   <ArrowLeft size={14} />
-                  Back to Workout
+                  Back to Routine
                 </button>
               )}
-              <span className="inline-block rounded-full border border-lime-300/80 bg-lime-100/60 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-900">
-                AI Biomechanics Engine
-              </span>
+              {isWorkoutMode ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-lime-300/80 bg-lime-100/60 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-900">
+                  <Lock size={12} className="text-lime-700" />
+                  Locked Active Workout
+                </span>
+              ) : (
+                <span className="inline-block rounded-full border border-slate-200 bg-slate-100 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-700">
+                  Standalone AI Sandbox
+                </span>
+              )}
             </div>
 
             <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-slate-950">
-              {workoutContext ? `${workoutContext.exercise.exerciseName} Analysis` : `${exercise} AI Coach`}
+              {isWorkoutMode && workout
+                ? `${workout.name}: ${exercise}`
+                : `${exercise} AI Coach`}
             </h1>
 
             <p className="mt-1 text-sm sm:text-base text-slate-600 leading-relaxed">
-              Real-time computer vision movement detection, anti-jitter skeletal landmark tracking &amp; full-cycle repetition counting.
+              {isWorkoutMode
+                ? `Exercise ${currentExerciseIndex + 1} of ${workoutExercises.length} • Set ${currentSet} of ${targetSets} • Goal: ${targetReps} Reps`
+                : "Real-time computer vision movement detection, anti-jitter skeletal landmark tracking & full-cycle repetition counting."}
             </p>
           </div>
 
@@ -639,23 +846,81 @@ export default function CameraAnalysisPage() {
               Reset Reps
             </button>
 
-            {workoutContext && (
+            {isWorkoutMode && (
               <button
                 onClick={handleSaveToWorkout}
                 disabled={savingFeedback}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#B8F23A] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition-all hover:bg-[#a6de2e] shadow-xs disabled:opacity-50"
               >
                 <Save size={14} />
-                {savingFeedback ? "Saving..." : saveSuccess ? "Saved to Workout!" : "Save to Workout"}
+                {savingFeedback ? "Saving..." : saveSuccess ? "Saved to Workout!" : "Save Progress"}
               </button>
             )}
           </div>
         </div>
 
         {/* ============================================================ */}
+        {/* WORKOUT COMPLETION CELEBRATION MODAL */}
+        {/* ============================================================ */}
+        {isWorkoutCompleted && (
+          <div className="mb-8 rounded-3xl border border-lime-300 bg-gradient-to-br from-lime-50 to-white p-8 sm:p-10 shadow-lg">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[#B8F23A] text-slate-950 shadow-md mb-4">
+                <Trophy size={40} />
+              </div>
+
+              <span className="rounded-full border border-lime-300 bg-lime-100 px-4 py-1 text-xs font-mono font-bold uppercase text-slate-900">
+                Protocol Complete
+              </span>
+
+              <h2 className="mt-3 text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950">
+                Workout Finished!
+              </h2>
+
+              <p className="mt-2 max-w-lg text-sm text-slate-600 leading-relaxed">
+                Outstanding execution! All exercises in {workout ? workout.name : "your workout"} have been completed with validated biomechanical form tracking.
+              </p>
+
+              {/* SUMMARY TABLE */}
+              <div className="mt-6 w-full max-w-2xl divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white text-left shadow-xs">
+                {completedSummary.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-100 text-xs font-bold font-mono text-lime-800">
+                        ✓
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">{item.exerciseName}</h4>
+                        <p className="text-xs text-slate-500 font-mono">
+                          {item.sets} sets × {item.reps} reps
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="rounded-md border border-lime-300 bg-lime-50 px-2.5 py-1 text-xs font-mono font-bold text-slate-950">
+                        Form Score: {item.formScore} / 100
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => navigate(workout ? `/workouts/${workout.id}` : "/workouts")}
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#B8F23A] px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-md hover:bg-[#a6de2e] transition"
+              >
+                <span>Return to Workout Routine</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================ */}
         {/* TAB 1: LIVE VISION & MOVEMENT DETECTION */}
         {/* ============================================================ */}
-        {activeTab === "vision" && (
+        {activeTab === "vision" && !isWorkoutCompleted && (
           <div className="grid gap-8 lg:grid-cols-3">
             {/* CAMERA STAGE (2 COLS) */}
             <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8 lg:col-span-2 shadow-xs">
@@ -663,7 +928,7 @@ export default function CameraAnalysisPage() {
                 <div className="flex items-center gap-2.5">
                   <Dumbbell size={18} className="text-slate-900" />
                   <h2 className="text-lg font-bold uppercase tracking-wider text-slate-950">
-                    Live Visual Stream
+                    Live Optical Stream
                   </h2>
                 </div>
 
@@ -715,6 +980,69 @@ export default function CameraAnalysisPage() {
                   </div>
                 )}
 
+                {/* OVERLAY: SET COMPLETE / REST BREAK INTERSTITIAL */}
+                {interstitialState === "set_complete" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-center p-6 z-20">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#B8F23A] text-slate-950 mb-3 shadow-lg">
+                      <Check size={28} />
+                    </div>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-white">
+                      Set {currentSet} Complete!
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-300">
+                      Take a quick rest. Next set starting soon...
+                    </p>
+                    {restCountdown !== null && (
+                      <div className="mt-4 flex items-center gap-2">
+                        <span className="text-3xl font-black font-mono text-[#B8F23A]">
+                          0{restCountdown}s
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      onClick={startNextSet}
+                      className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#B8F23A] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-md hover:bg-[#a6de2e]"
+                    >
+                      <Play size={13} fill="currentColor" />
+                      <span>Start Set {currentSet + 1} Now</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* OVERLAY: EXERCISE COMPLETE INTERSTITIAL */}
+                {interstitialState === "exercise_complete" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm text-center p-6 z-20">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400 text-slate-950 mb-3 shadow-lg">
+                      <Trophy size={28} />
+                    </div>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-white">
+                      {exercise} Completed!
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-300">
+                      All {targetSets} sets finished in Good Form. Saving telemetry...
+                    </p>
+                    {currentExerciseIndex + 1 < workoutExercises.length && (
+                      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
+                        Next Up: <strong className="text-white">{workoutExercises[currentExerciseIndex + 1].exerciseName}</strong>
+                      </div>
+                    )}
+                    {restCountdown !== null && (
+                      <span className="mt-3 text-2xl font-black font-mono text-[#B8F23A]">
+                        Next in 0{restCountdown}s
+                      </span>
+                    )}
+                    {currentExerciseIndex + 1 < workoutExercises.length && (
+                      <button
+                        onClick={() => advanceToNextExercise(currentExerciseIndex + 1)}
+                        className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#B8F23A] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-md hover:bg-[#a6de2e]"
+                      >
+                        <FastForward size={14} />
+                        <span>Continue Now</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* OVERLAY TELEMETRY HUDS */}
                 {detecting && (
                   <>
@@ -724,7 +1052,12 @@ export default function CameraAnalysisPage() {
                         <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
                           Reps
                         </p>
-                        <p className="text-2xl font-black font-mono text-[#B8F23A]">{reps}</p>
+                        <p className="text-2xl font-black font-mono text-[#B8F23A]">
+                          {reps}
+                          {isWorkoutMode && (
+                            <span className="text-sm font-normal text-slate-400">/{targetReps}</span>
+                          )}
+                        </p>
                       </div>
                       <div className="h-8 w-px bg-white/10" />
                       <div>
@@ -735,6 +1068,19 @@ export default function CameraAnalysisPage() {
                           {stage}
                         </p>
                       </div>
+                      {isWorkoutMode && (
+                        <>
+                          <div className="h-8 w-px bg-white/10" />
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E92]">
+                              Set
+                            </p>
+                            <p className="text-xs font-mono font-bold uppercase text-[#B8F23A]">
+                              {currentSet}/{targetSets}
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* TOP CENTER: AI STATUS BADGE */}
@@ -855,11 +1201,11 @@ export default function CameraAnalysisPage() {
                 )}
               </div>
 
-              {/* LIVE FEEDBACK CUE */}
+              {/* LIVE FEEDBACK CUE / MISMATCH WARNING */}
               <div
                 className={`mt-4 rounded-xl border p-4 transition-all duration-300 ${
                   aiState === "EXERCISE_MISMATCH"
-                    ? "border-rose-300 bg-rose-50/90 text-rose-950"
+                    ? "border-rose-400 bg-rose-100 text-rose-950 shadow-md"
                     : aiState === "POSITION_ADJUSTMENT"
                     ? "border-amber-300 bg-amber-50/90 text-amber-950"
                     : !isCorrectForm
@@ -872,7 +1218,7 @@ export default function CameraAnalysisPage() {
                     size={16}
                     className={
                       aiState === "EXERCISE_MISMATCH"
-                        ? "text-rose-600"
+                        ? "text-rose-700 animate-bounce"
                         : aiState === "POSITION_ADJUSTMENT"
                         ? "text-amber-600"
                         : !isCorrectForm
@@ -880,9 +1226,9 @@ export default function CameraAnalysisPage() {
                         : "text-emerald-600"
                     }
                   />
-                  <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+                  <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-600">
                     {aiState === "EXERCISE_MISMATCH"
-                      ? "Exercise Validation Alert"
+                      ? "Exercise Validation Alert — Rep Discarded"
                       : aiState === "POSITION_ADJUSTMENT"
                       ? "Position & Framing Guidance"
                       : "Live Coaching Cue"}
@@ -899,47 +1245,128 @@ export default function CameraAnalysisPage() {
                       : "text-slate-900"
                   }`}
                 >
-                  {feedback}
+                  {aiState === "EXERCISE_MISMATCH" && detectedExercise
+                    ? `Exercise Mismatch: Expected ${exercise}, but detected ${detectedExercise}. Please perform ${exercise} to count reps.`
+                    : feedback}
                 </p>
               </div>
             </div>
 
             {/* TELEMETRY & CONTROLS SIDEBAR (1 COL) */}
             <div className="space-y-6">
-              {/* EXERCISE SELECTOR */}
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold uppercase tracking-wider text-slate-950">
-                    Target Exercise
-                  </h2>
-                  <button
-                    onClick={() => setActiveTab("guide")}
-                    className="text-xs font-bold text-slate-900 hover:text-lime-700 underline underline-offset-2"
-                  >
-                    View Guide →
-                  </button>
-                </div>
+              {/* EXERCISE SELECTOR OR LOCKED SEQUENCE HUD */}
+              {isWorkoutMode ? (
+                /* LOCKED WORKOUT SEQUENCE HUD (No dropdown, strictly follows protocol) */
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Lock size={14} className="text-[#65A30D]" />
+                      <h2 className="text-base font-bold uppercase tracking-wider text-slate-950">
+                        Locked Sequence
+                      </h2>
+                    </div>
+                    <span className="rounded-full border border-lime-300 bg-lime-100 px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase text-slate-950">
+                      Step {currentExerciseIndex + 1}/{workoutExercises.length}
+                    </span>
+                  </div>
 
-                <select
-                  value={exercise}
-                  onChange={(e) => {
-                    setExercise(e.target.value);
-                    resetSession();
-                  }}
-                  disabled={detecting}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white disabled:opacity-60"
-                >
-                  <option value="Bicep Curl">Bicep Curl</option>
-                  <option value="Squat">Squat</option>
-                  <option value="Push-up">Push-up</option>
-                  <option value="Shoulder Press">Shoulder Press</option>
-                  <option value="Lateral Raise">Lateral Raise</option>
-                  <option value="Lunge">Lunge</option>
-                  <option value="Jumping Jacks">Jumping Jacks</option>
-                  <option value="Plank">Plank</option>
-                  <option value="Hammer Curl">Hammer Curl</option>
-                </select>
-              </div>
+                  <div className="rounded-xl border border-lime-200 bg-lime-50/60 p-4 mb-4">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#65A30D]">
+                      Current Target
+                    </span>
+                    <h3 className="text-lg font-black text-slate-950 mt-0.5">
+                      {exercise}
+                    </h3>
+                    <div className="mt-2 flex items-center justify-between text-xs font-mono text-slate-600">
+                      <span>Set {currentSet} of {targetSets}</span>
+                      <span className="font-bold text-slate-950">{reps} / {targetReps} reps</span>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full bg-[#84CC16] transition-all duration-200"
+                        style={{ width: `${Math.min(100, (reps / (targetReps || 1)) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ROUTINE QUEUE PREVIEW */}
+                  <div className="mt-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                      Routine Queue
+                    </span>
+                    <div className="space-y-2">
+                      {workoutExercises.map((ex, idx) => {
+                        const isPast = idx < currentExerciseIndex;
+                        const isCurrent = idx === currentExerciseIndex;
+
+                        return (
+                          <div
+                            key={ex.id}
+                            className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-mono transition ${
+                              isCurrent
+                                ? "border border-lime-300 bg-lime-50 font-bold text-slate-950 shadow-xs"
+                                : isPast
+                                ? "border border-slate-100 bg-slate-50 text-slate-400"
+                                : "border border-slate-100 bg-white text-slate-600"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>
+                                {isPast ? (
+                                  <span className="text-emerald-600 font-bold">✓</span>
+                                ) : isCurrent ? (
+                                  <span className="text-[#65A30D] font-bold">▶</span>
+                                ) : (
+                                  <span>{idx + 1}.</span>
+                                )}
+                              </span>
+                              <span>{ex.exerciseName}</span>
+                            </div>
+                            <span className="text-[11px] text-slate-500">
+                              {ex.sets}s × {ex.reps}r
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* STANDALONE EXERCISE SELECTOR (Free Testing Mode) */
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-bold uppercase tracking-wider text-slate-950">
+                      Target Exercise
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab("guide")}
+                      className="text-xs font-bold text-slate-900 hover:text-lime-700 underline underline-offset-2"
+                    >
+                      View Guide →
+                    </button>
+                  </div>
+
+                  <select
+                    value={exercise}
+                    onChange={(e) => {
+                      setExercise(e.target.value);
+                      resetSession();
+                    }}
+                    disabled={detecting}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white disabled:opacity-60"
+                  >
+                    <option value="Bicep Curl">Bicep Curl</option>
+                    <option value="Squat">Squat</option>
+                    <option value="Push-up">Push-up</option>
+                    <option value="Shoulder Press">Shoulder Press</option>
+                    <option value="Lateral Raise">Lateral Raise</option>
+                    <option value="Lunge">Lunge</option>
+                    <option value="Jumping Jacks">Jumping Jacks</option>
+                    <option value="Plank">Plank</option>
+                    <option value="Hammer Curl">Hammer Curl</option>
+                  </select>
+                </div>
+              )}
 
               {/* METRICS HUD */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
@@ -1048,11 +1475,11 @@ export default function CameraAnalysisPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>1 Full Cycle:</strong> Must start from extended bottom (&gt;150°) then curl up to contraction (&lt;45°).</span>
+                    <span><strong>Full Cycle:</strong> Complete full range of motion from start extension to contraction.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>Elbow Anchor:</strong> Pinned to ribs throughout. Swinging arms triggers <strong>Bad Form</strong> and discards rep.</span>
+                    <span><strong>No Mismatch:</strong> Must perform the target exercise; different exercises are rejected.</span>
                   </li>
                 </ul>
               </div>

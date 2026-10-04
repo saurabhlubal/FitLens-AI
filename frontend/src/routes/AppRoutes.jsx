@@ -100,6 +100,15 @@ export default function AppRoutes() {
         }
       />
 
+      <Route
+        path="/workouts/:workoutId/active"
+        element={
+          <ProtectedRoute>
+            <CameraAnalysisPage />
+          </ProtectedRoute>
+        }
+      />
+
 
       {/* =========================
           CAMERA / AI ANALYSIS

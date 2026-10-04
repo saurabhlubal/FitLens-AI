@@ -12,4 +12,6 @@ public class WorkoutExerciseRequest {
     private Integer sets;
 
     private Integer reps;
+
+    private Integer orderIndex;
 }
