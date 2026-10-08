@@ -10,7 +10,7 @@ COPY pom.xml .
 RUN mvn dependency:resolve -q
 
 COPY src ./src
-RUN mvn clean package -DskipTests -o
+RUN mvn clean package -DskipTests
 
 # Stage 2: Minimal runtime image
 FROM eclipse-temurin:21-jre-alpine
