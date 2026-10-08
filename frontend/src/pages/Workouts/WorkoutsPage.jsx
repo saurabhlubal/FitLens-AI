@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
@@ -54,7 +55,7 @@ export default function WorkoutsPage() {
       setError("");
 
       const response = await fetch(
-        "http://localhost:8080/api/workouts",
+        `${API_BASE}/workouts`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,7 +82,7 @@ export default function WorkoutsPage() {
   const fetchExercises = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8080/api/exercises",
+        `${API_BASE}/exercises`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -106,7 +107,7 @@ export default function WorkoutsPage() {
   const fetchWorkoutExercises = async (workoutId) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${workoutId}/exercises`,
+        `${API_BASE}/workouts/${workoutId}/exercises`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -156,7 +157,7 @@ export default function WorkoutsPage() {
       setError("");
 
       const response = await fetch(
-        "http://localhost:8080/api/workouts",
+        `${API_BASE}/workouts`,
         {
           method: "POST",
           headers: {
@@ -213,7 +214,7 @@ export default function WorkoutsPage() {
       setExerciseLoading(true);
 
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${selectedWorkout.id}/exercises`,
+        `${API_BASE}/workouts/${selectedWorkout.id}/exercises`,
         {
           method: "POST",
           headers: {
@@ -277,7 +278,7 @@ export default function WorkoutsPage() {
       setEditLoading(true);
 
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${selectedWorkout.id}/exercises/${exercise.id}`,
+        `${API_BASE}/workouts/${selectedWorkout.id}/exercises/${exercise.id}`,
         {
           method: "PUT",
           headers: {
@@ -321,7 +322,7 @@ export default function WorkoutsPage() {
       setDeleteLoading(true);
 
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${selectedWorkout.id}/exercises/${exercise.id}`,
+        `${API_BASE}/workouts/${selectedWorkout.id}/exercises/${exercise.id}`,
         {
           method: "DELETE",
           headers: {
@@ -361,7 +362,7 @@ export default function WorkoutsPage() {
       setDeleteLoading(true);
 
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${workout.id}`,
+        `${API_BASE}/workouts/${workout.id}`,
         {
           method: "DELETE",
           headers: {
@@ -781,3 +782,6 @@ export default function WorkoutsPage() {
     </div>
   );
 }
+
+
+

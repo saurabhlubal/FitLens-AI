@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -31,7 +32,7 @@ export default function FitnessProfilePage() {
 
       try {
         const response = await fetch(
-          "http://localhost:8080/api/fitness-profile",
+          `${API_BASE}/fitness-profile`,
           {
             method: "GET",
             headers: {
@@ -81,7 +82,7 @@ export default function FitnessProfilePage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/fitness-profile",
+        `${API_BASE}/fitness-profile`,
         {
           method: "POST",
           headers: {
@@ -291,3 +292,6 @@ export default function FitnessProfilePage() {
     </div>
   );
 }
+
+
+

@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dumbbell, Clock, Flame, Target, Sparkles } from "lucide-react";
@@ -21,7 +22,7 @@ export default function ProgressPage() {
         setError("");
 
         const workoutResponse = await fetch(
-          "http://localhost:8080/api/workouts",
+          `${API_BASE}/workouts`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -41,7 +42,7 @@ export default function ProgressPage() {
         const exerciseResults = await Promise.all(
           workoutData.map(async (workout) => {
             const response = await fetch(
-              `http://localhost:8080/api/workouts/${workout.id}/exercises`,
+              `${API_BASE}/workouts/${workout.id}/exercises`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -409,3 +410,6 @@ export default function ProgressPage() {
     </div>
   );
 }
+
+
+

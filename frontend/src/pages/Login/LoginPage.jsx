@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -33,7 +34,7 @@ export default function LoginPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/login",
+        `${API_BASE}/auth/login`,
         {
           method: "POST",
           headers: {
@@ -322,3 +323,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+

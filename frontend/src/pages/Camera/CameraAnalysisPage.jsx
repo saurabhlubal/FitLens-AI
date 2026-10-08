@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -131,14 +132,14 @@ export default function CameraAnalysisPage() {
 
     const fetchWorkoutContext = async () => {
       try {
-        const workoutsRes = await fetch("http://localhost:8080/api/workouts", {
+        const workoutsRes = await fetch(`${API_BASE}/workouts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!workoutsRes.ok) return;
         const workouts = await workoutsRes.json();
 
         for (const w of workouts) {
-          const exRes = await fetch(`http://localhost:8080/api/workouts/${w.id}/exercises`, {
+          const exRes = await fetch(`${API_BASE}/workouts/${w.id}/exercises`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (exRes.ok) {
@@ -1308,3 +1309,6 @@ export default function CameraAnalysisPage() {
     </div>
   );
 }
+
+
+

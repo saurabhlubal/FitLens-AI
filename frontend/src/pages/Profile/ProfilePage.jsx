@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
@@ -33,7 +34,7 @@ export default function ProfilePage() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:8080/api/user/profile",
+          `${API_BASE}/user/profile`,
           {
             method: "GET",
             headers: {
@@ -81,7 +82,7 @@ export default function ProfilePage() {
       setSuccess("");
 
       const response = await fetch(
-        "http://localhost:8080/api/user/profile",
+        `${API_BASE}/user/profile`,
         {
           method: "PUT",
           headers: {
@@ -444,3 +445,6 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+
+

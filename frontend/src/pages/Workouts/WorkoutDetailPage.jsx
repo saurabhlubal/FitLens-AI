@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/api";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Clock, Flame, Play } from "lucide-react";
@@ -20,7 +21,7 @@ export default function WorkoutDetailPage() {
       setError("");
 
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${workoutId}`,
+        `${API_BASE}/workouts/${workoutId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -42,7 +43,7 @@ export default function WorkoutDetailPage() {
   const fetchExercises = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/workouts/${workoutId}/exercises`,
+        `${API_BASE}/workouts/${workoutId}/exercises`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -277,3 +278,6 @@ export default function WorkoutDetailPage() {
     </div>
   );
 }
+
+
+
