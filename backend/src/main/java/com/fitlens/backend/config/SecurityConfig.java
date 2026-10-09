@@ -45,9 +45,11 @@ public class SecurityConfig {
                         // Allow CORS preflight requests from any origin
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/ai/movement/analyze"
+                                "/api/auth/**",
+                                "/auth/**",
+                                "/api/ai/movement/analyze",
+                                "/error",
+                                "/favicon.ico"
                         ).permitAll()
 
                         .anyRequest().authenticated()
