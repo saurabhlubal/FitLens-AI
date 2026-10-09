@@ -163,17 +163,6 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <Divider text="OR TEST IMMEDIATELY" />
-
-        <button
-          type="button"
-          onClick={handleGuestDemo}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-100 py-3 text-xs font-bold uppercase tracking-wider text-slate-800 transition hover:bg-slate-200 shadow-xs"
-        >
-          <Sparkles size={14} className="text-lime-600" />
-          ⚡ Instant Demo Mode (No Server Needed)
-        </button>
-
         <p className="mt-6 text-center text-xs text-slate-500">
           Already have an account?{" "}
           <Link

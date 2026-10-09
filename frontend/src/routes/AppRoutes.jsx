@@ -109,11 +109,12 @@ export default function AppRoutes() {
       <Route path="/ai-analysis/:exerciseId" element={<CameraAnalysisPage />} />
 
       {/* =========================
-          TRAINING & POSE TRAINER (Direct Access / In-Browser)
+          TRAINING, SCAN & POSE TRAINER (Direct Access / In-Browser)
       ========================= */}
 
       <Route path="/training" element={<TrainingPage />} />
       <Route path="/train" element={<TrainPage />} />
+      <Route path="/scan" element={<ScanPage />} />
 
       {/* =========================
           404
