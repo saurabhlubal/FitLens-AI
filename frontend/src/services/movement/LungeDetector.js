@@ -127,3 +127,5 @@ export class LungeDetector extends BaseExerciseDetector {
 }
 
 export default LungeDetector;
+
+

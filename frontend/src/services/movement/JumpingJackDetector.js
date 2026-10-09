@@ -130,3 +130,5 @@ export class JumpingJackDetector extends BaseExerciseDetector {
 }
 
 export default JumpingJackDetector;
+
+

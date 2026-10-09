@@ -127,3 +127,5 @@ export class PushUpDetector extends BaseExerciseDetector {
 }
 
 export default PushUpDetector;
+
+

@@ -166,3 +166,5 @@ export class BicepCurlDetector extends BaseExerciseDetector {
 }
 
 export default BicepCurlDetector;
+
+

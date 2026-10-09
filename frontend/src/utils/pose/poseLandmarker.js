@@ -13,8 +13,10 @@ export async function createPoseLandmarker() {
   try {
     console.log("Loading MediaPipe WASM runtime from CDN...");
 
-    // Use reliable local public WASM assets
-    const vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
+    // Use CDN with exact version matching installed @mediapipe/tasks-vision package
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+    );
 
     console.log("MediaPipe WASM initialized.");
 
@@ -41,6 +43,8 @@ export async function createPoseLandmarker() {
     return poseLandmarker;
   } catch (error) {
     console.error("Failed to initialize PoseLandmarker:", error);
+    poseLandmarker = null;
     throw error;
   }
 }
+

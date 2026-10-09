@@ -124,3 +124,5 @@ export class SquatDetector extends BaseExerciseDetector {
 }
 
 export default SquatDetector;
+
+

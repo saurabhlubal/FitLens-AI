@@ -65,8 +65,9 @@ class OnnxInferenceService {
       this.isLoading = true;
       const modelPath = "/models/fitlens.onnx";
 
-      // Configure WASM worker paths
-      ort.env.wasm.numThreads = Math.min(4, typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 2 : 2);
+      // Configure WASM paths from CDN and configure threads safely
+      ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
+      ort.env.wasm.numThreads = 1;
       ort.env.wasm.simd = true;
 
       const hasWebGPU = await this.checkWebGpuSupport();
@@ -213,3 +214,5 @@ class OnnxInferenceService {
 
 export const onnxInferenceService = new OnnxInferenceService();
 export default onnxInferenceService;
+
+

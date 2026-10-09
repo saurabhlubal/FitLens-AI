@@ -86,3 +86,5 @@ class DetectorFactory {
 
 export const detectorFactory = new DetectorFactory();
 export default detectorFactory;
+
+

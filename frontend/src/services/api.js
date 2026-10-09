@@ -29,3 +29,4 @@ api.interceptors.request.use((config) => {
 export const API_BASE = getBaseURL();
 
 export default api;
+

@@ -4,3 +4,4 @@ export const APP = {
   description:
     "Real-time AI powered movement analysis for better form, fewer injuries, and faster progress.",
 };
+

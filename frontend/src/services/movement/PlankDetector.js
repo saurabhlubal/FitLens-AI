@@ -178,3 +178,5 @@ export class PlankDetector extends BaseExerciseDetector {
 }
 
 export default PlankDetector;
+
+

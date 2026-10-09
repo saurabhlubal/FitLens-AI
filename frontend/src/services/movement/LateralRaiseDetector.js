@@ -135,3 +135,5 @@ export class LateralRaiseDetector extends BaseExerciseDetector {
 }
 
 export default LateralRaiseDetector;
+
+

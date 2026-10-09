@@ -167,3 +167,5 @@ export class HammerCurlDetector extends BaseExerciseDetector {
 }
 
 export default HammerCurlDetector;
+
+

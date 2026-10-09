@@ -115,3 +115,5 @@ export class ShoulderPressDetector extends BaseExerciseDetector {
 }
 
 export default ShoulderPressDetector;
+
+
