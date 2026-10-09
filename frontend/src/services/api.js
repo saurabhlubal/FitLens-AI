@@ -4,10 +4,12 @@ import axios from "axios";
 // 1. VITE_API_BASE_URL env var (set in .env.local or Vercel dashboard)
 // 2. localhost:8080 fallback for local dev
 const getBaseURL = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+  let url = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+  url = url.trim().replace(/\/+$/, ""); // Remove any trailing slash
+  if (!url.endsWith("/api")) {
+    url += "/api";
   }
-  return "http://localhost:8080/api";
+  return url;
 };
 
 const api = axios.create({
