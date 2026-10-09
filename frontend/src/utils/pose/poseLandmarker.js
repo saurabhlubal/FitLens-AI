@@ -13,9 +13,9 @@ export async function createPoseLandmarker() {
   try {
     console.log("Loading MediaPipe WASM runtime from CDN...");
 
-    // Use CDN with exact version matching installed @mediapipe/tasks-vision package
+    // Use CDN matching standard MediaPipe vision WASM assets
     const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
     );
 
     console.log("MediaPipe WASM initialized.");
